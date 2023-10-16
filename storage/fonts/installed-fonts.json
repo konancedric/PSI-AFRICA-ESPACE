@@ -1,0 +1,22 @@
+{
+    "nunito sans": {
+        "300": "C:\\laragon\\www\\gest-rdv\\storage\\fonts\/nunito_sans_300_df202a0ebbc34c2f83b46bbf34fdf8cc",
+        "normal": "C:\\laragon\\www\\gest-rdv\\storage\\fonts\/nunito_sans_normal_dada2f23bd7efc0c92ec194f84745c12",
+        "600": "C:\\laragon\\www\\gest-rdv\\storage\\fonts\/nunito_sans_600_3798fe16945cbb8405aaeda1f3686d57",
+        "bold": "C:\\laragon\\www\\gest-rdv\\storage\\fonts\/nunito_sans_bold_b534b3f85c9da74c5f16813cd4e9e593",
+        "800": "nunito_sans_800_b4bf7c915a1546080ffcc03e054d2198"
+    },
+    "summernote": {
+        "normal": "summernote_normal_d19bb4992496e8f4d15f69b6ad184a7f"
+    },
+    "font awesome 5 brands": {
+        "normal": "font_awesome_5_brands_normal_f3172ad0858b1388946ce7e54db7079a"
+    },
+    "font awesome 5 free": {
+        "normal": "C:\\laragon\\www\\gest-rdv\\storage\\fonts\/font_awesome_5_free_normal_9934be2a047cbe0c239c58366fc0d759",
+        "900": "font_awesome_5_free_900_773ace2c9536e133f1d41716a3777492"
+    },
+    "iconkit": {
+        "normal": "iconkit_normal_ee770029efbf13e8fd2897b983f1f8ad"
+    }
+}
