@@ -51,7 +51,7 @@
                 $dataVotant = App\Models\Votes::where('id_election', $tabElections->id)->get();
                 $nbrElecteur = count($dataElecteur); 
                 $nbrVotant = count($dataVotant);
-                $pResultat = (($nbrVotant * 100) / 100);
+                $pResultat = (($nbrVotant * 100) / $nbrElecteur);
             ?>
             <tr>
                 <td>{{ $tabElections->created_at }}</td>

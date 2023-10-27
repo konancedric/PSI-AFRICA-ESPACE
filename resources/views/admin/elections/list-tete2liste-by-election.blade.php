@@ -80,6 +80,7 @@
             <th>{{ __('Catégorie')}}</th>
             <th>{{ __('Contact')}}</th>
             <th>{{ __('Photo')}}</th>
+            <th>{{ __('Résultat')}}</th>
         </tr>
     </thead>
     <tbody>
@@ -112,6 +113,26 @@
                 <td>{{ $tabUsers->contact }}</td>
                 <td>
                     <img src="upload/users/{{$tabUsers->photo_user }}"  width="80%"/>
+                </td>
+                <td>
+                    <?php
+                        $searchVotantByCandidat = App\Models\Votes::where('id_election', $tabElections->id)->where('id_candidat', $tabUsers->id)->get();
+                        $nbrVotantCandidat = count($searchVotantByCandidat);
+                        $pResultatCandidat = (($nbrVotantCandidat * 100) / $nbrElecteur);
+                    ?>
+                    <div class="widget-body">
+                         <div class="d-flex justify-content-between align-items-center">
+                            <div class="state">
+                                <span class="mb-30 fw-700">{{$nbrVotantCandidat}} voix / {{$nbrElecteur}}</span>
+                            </div>
+                        </div>
+                        <h5 class="mt-10 d-block text-green ml-10">
+                         {{$pResultatCandidat}} %
+                        </h5>
+                    </div>
+                    <div class="progress progress-sm">
+                        <div class="progress-bar bg-info" role="progressbar" aria-valuenow="{{$pResultatCandidat}}" aria-valuemin="0" aria-valuemax="{{$nbrElecteur}}" style="width: {{$pResultatCandidat}}%;"></div>
+                    </div>
                 </td>
             </tr>
         <?php

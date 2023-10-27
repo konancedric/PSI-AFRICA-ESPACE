@@ -26,7 +26,7 @@
                 </h5>
             </div>
             <div class="progress progress-sm">
-                <div class="progress-bar bg-info" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="{{$nbrElecteur}}" style="width: 30%;"></div>
+                <div class="progress-bar bg-info" role="progressbar" aria-valuenow="{{$pResultat}}" aria-valuemin="0" aria-valuemax="{{$nbrElecteur}}" style="width: {{$pResultat}}%;"></div>
             </div>
         </div>
     </div>
