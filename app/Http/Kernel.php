@@ -14,9 +14,10 @@ class Kernel extends HttpKernel
      * @var array
      */
     protected $middleware = [
+        // \App\Http\Middleware\TrustHosts::class,
         \App\Http\Middleware\TrustProxies::class,
         \Fruitcake\Cors\HandleCors::class,
-        \App\Http\Middleware\CheckForMaintenanceMode::class,
+        \App\Http\Middleware\CheckForMaintenanceMode::class, // Laravel 7
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
@@ -62,5 +63,33 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        
+        // ==================== MIDDLEWARES SPATIE PERMISSION ====================
+        'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+        'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+        'role_or_permission' => \App\Http\Middleware\RoleOrPermissionMiddleware::class,
+        'bypass.permission' => \App\Http\Middleware\BypassPermissionCheck::class,
+        
+        // ==================== MIDDLEWARE CUSTOM USER TYPE - EXISTANT ====================
+        'user_type' => \App\Http\Middleware\UserTypeMiddleware::class,
+        
+        // ==================== NOUVEAUX MIDDLEWARES D'ACCÈS PSI AFRICA ====================
+        'admin.access' => \App\Http\Middleware\AdminAccessMiddleware::class,
+        'commercial.access' => \App\Http\Middleware\CommercialAccessMiddleware::class,
+        'comptoir.access' => \App\Http\Middleware\ComptoirAccessMiddleware::class,
+        'commercial.or.admin.access' => \App\Http\Middleware\CommercialOrAdminAccessMiddleware::class,
+        'comptoir.or.admin.access' => \App\Http\Middleware\ComptoirOrAdminAccessMiddleware::class,
+        'check.crm.permission' => \App\Http\Middleware\CheckCRMPermission::class,
+        'check.caisse.access' => \App\Http\Middleware\CheckCaisseAccess::class,
     ];
+
+/**
+ * The application's middleware aliases.
+ *
+ * @var array
+ */
+protected $middlewareAliases = [
+    // ... autres middlewares
+    'crm.permission' => \App\Http\Middleware\CheckCRMPermission::class,
+];
 }

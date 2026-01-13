@@ -1,0 +1,4387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSI Africa CRM - Système de Gestion Intégré</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="shortcut icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #06b6d4;
+            --success: #16a34a;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8fafc;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #f8fafc 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Authentication Modal */
+        .auth-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .auth-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            width: 90vw;
+            max-width: 480px;
+            box-shadow: 0 25px 50px -12px var(--shadow);
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .auth-subtitle {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .app-title {
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .user-avatar {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.5rem;
+        }
+
+        .nav-tab {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        }
+
+        .nav-badge {
+            position: absolute;
+            top: -0.25rem;
+            right: -0.25rem;
+            background: var(--danger);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 10px;
+            min-width: 1.25rem;
+            text-align: center;
+        }
+
+        /* Access Denied Overlay */
+        .access-denied {
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            border-radius: 8px;
+        }
+
+        .access-denied-content {
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .access-denied-content h3 {
+            color: var(--danger);
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        /* Panels */
+        .panel {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 500px;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel.hidden {
+            display: none;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.1);
+        }
+
+        .card h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .stat-trend {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .trend-down {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            border-color: var(--warning);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            overflow-x: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table th {
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table tbody tr:hover {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-success {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--info);
+            border: 1px solid var(--info);
+        }
+
+        .badge-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-paid {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .badge-partial {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--info);
+        }
+
+        .badge-overdue {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px var(--shadow);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 0.5rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 1rem 0;
+        }
+
+        /* Search and Filter */
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .filter-select {
+            min-width: 150px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            color: var(--text-primary);
+            box-shadow: 0 10px 40px var(--shadow);
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            z-index: 1001;
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        /* Utilities */
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mt-4 { margin-top: 1rem; }
+        .text-center { text-align: center; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .font-semibold { font-weight: 600; }
+        .font-bold { font-weight: 700; }
+        .text-primary { color: var(--text-primary); }
+        .text-secondary { color: var(--text-secondary); }
+        .text-muted { color: var(--text-muted); }
+        .text-success { color: var(--success); }
+        .text-warning { color: var(--warning); }
+        .text-danger { color: var(--danger); }
+        .text-info { color: var(--info); }
+        .hidden { display: none !important; }
+        .w-full { width: 100%; }
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+        /* Role-based visibility - STRICT ADMIN CONTROL */
+        body[data-role="agent"] .admin-only,
+        body[data-role="agent"] .manager-only {
+            display: none !important;
+        }
+        
+        body[data-role="manager"] .admin-only {
+            display: none !important;
+        }
+
+        body[data-auth="false"] .app-content {
+            display: none !important;
+        }
+
+        body[data-auth="true"] .auth-modal {
+            display: none !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .app-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .nav-tabs {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .grid-cols-2,
+            .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                margin: 1rem;
+                max-width: none;
+            }
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Demo buttons */
+        .demo-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+
+        .demo-btn {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 20px;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .demo-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Reminder Modal Styles */
+        .reminder-channel {
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        .reminder-channel.hidden {
+            display: none !important;
+        }
+
+        #reminderModal .modal-content {
+            max-width: 800px;
+        }
+
+        #reminderModal .nav-tabs {
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0;
+        }
+
+        #reminderModal .nav-tab {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            padding: 0.75rem 1rem;
+            margin-bottom: -1px;
+        }
+
+        #reminderModal .nav-tab.active {
+            border-bottom-color: var(--primary);
+            background: transparent;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .sms-counter {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .variable-info {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .variable-info h5 {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+        }
+
+        .variables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.25rem;
+            color: var(--text-secondary);
+        }
+
+        .disclaimer {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 3px solid var(--warning);
+            border-radius: 4px;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .invoice-reminder-info {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        /* Admin Panel Styles */
+        .admin-section {
+            background: var(--bg-secondary);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .admin-section h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.125rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .user-management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .user-card {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .user-card.blocked {
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+    </style>
+
+</head>
+<body data-auth="false" data-role="">
+    <!-- Login Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-content">
+            <div class="text-center mb-6">
+                <img src="img/logo png png.png" alt="PSI Africa Logo" class="auth-logo" style="height: 90px; width: auto; margin-bottom: 1rem;">
+                <div class="auth-title">PSI Africa CRM</div>
+                <div class="auth-subtitle">Système de Gestion Intégré</div>
+            </div>
+            <div class="text-sm text-secondary text-center mb-4">
+                Facturation • Recouvrement • Performance • Analytics
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" id="loginUsername" class="form-control" 
+                           placeholder="admin | manager | agent1 | agent2" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" id="loginPassword" class="form-control" 
+                           placeholder="••••••••••" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full mb-4" id="loginBtn">
+                    Se connecter
+                </button>
+            </form>
+
+
+            <div id="loginError" class="text-danger text-sm text-center mt-4 hidden"></div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div class="app-content">
+        <div class="container">
+            <!-- Header -->
+             <header class="app-header">
+                <div class="flex items-center gap-4">
+                    <img src="img/logo png png.png" alt="PSI Africa Logo" class="logo-header" style="height: 100px; width: auto;">
+                    <div>
+                        <h1 class="app-title">PSI Africa CRM</h1>
+                        <p class="text-secondary">Système de Gestion Intégré</p>
+                    </div>
+                </div>
+                
+                <div class="user-info">
+                    <div class="text-sm">
+                        <div class="font-semibold" id="currentUser">-</div>
+                        <div class="text-xs text-secondary" id="currentRole">-</div>
+                    </div>
+                    <div class="user-avatar">
+                        <span id="userInitials">-</span>
+                    </div>
+                    <button class="btn" onclick="showNotifications()" id="notifBtn">
+                        🔔 <span id="notifCount" class="nav-badge hidden">0</span>
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">Déconnexion</button>
+                </div>
+            </header>
+
+            <!-- Navigation Tabs -->
+            <nav class="nav-tabs">
+                <button class="nav-tab active" data-panel="dashboard">🏠 Dashboard</button>
+                <button class="nav-tab" data-panel="clients">👥 Clients</button>
+                <button class="nav-tab" data-panel="invoicing">
+                    💰 Facturation
+                    <span class="nav-badge hidden" id="invoiceNotif">0</span>
+                </button>
+                <button class="nav-tab" data-panel="recovery">
+                    📞 Recouvrement
+                    <span class="nav-badge hidden" id="recoveryNotif">0</span>
+                </button>
+                <button class="nav-tab manager-only admin-only" data-panel="performance">📈 Performance</button>
+                <button class="nav-tab admin-only" data-panel="analytics">📊 Analytics</button>
+                <button class="nav-tab admin-only" data-panel="admin">⚙️ Administration</button>
+            </nav>
+
+            <!-- Dashboard Panel -->
+            <section class="panel" id="dashboard-panel">
+                <div class="access-denied hidden" id="dashboard-access-denied">
+                    <div class="access-denied-content">
+                        <h3>🔒 Accès Restreint</h3>
+                        <p>Votre rôle ne vous permet pas d'accéder au Dashboard.</p>
+                        <p>Seuls les Managers et Administrateurs ont accès aux vues d'ensemble.</p>
+                    </div>
+                </div>
+                <div id="dashboard-content">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-bold text-xl">📊 Vue d'ensemble</h2>
+                        <div class="text-sm text-secondary" id="dashboardDate"></div>
+                    </div>
+
+                    <!-- KPI Stats -->
+                    <div class="stats-grid" id="kpiStats">
+                        <!-- KPIs will be populated by JavaScript -->
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        <div class="card">
+                            <h3>📈 Évolution du CA</h3>
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>🎯 Statuts Clients</h3>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity -->
+                    <div class="card">
+                        <h3>🎯 Activités Récentes</h3>
+                        <div id="recentActivity">
+                            <div class="text-secondary text-center">Chargement des activités...</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Clients Panel -->
+            <section class="panel hidden" id="clients-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold text-xl">👥 Gestion des Clients</h2>
+                    <div class="flex gap-2">
+                        <button class="btn btn-success admin-only" onclick="exportClients()">📊 Exporter</button>
+                        <button class="btn btn-primary" onclick="showAddClientModal()">
+                            ➕ Nouveau Client
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="search-container">
+                    <input type="text" class="form-control search-input" placeholder="🔍 Rechercher un client..." id="clientSearch">
+                    <select class="form-control filter-select" id="statusFilter">
+                        <option value="">Tous les statuts</option>
+                        <option value="Lead">Lead</option>
+                        <option value="Prospect">Prospect</option>
+                        <option value="Opportunité">Opportunité</option>
+                        <option value="Négociation">Négociation</option>
+                        <option value="Converti">Converti</option>
+                        <option value="Perdu">Perdu</option>
+                    </select>
+                    <select class="form-control filter-select" id="prestationFilter">
+                        <option value="">Toutes prestations</option>
+                        <option value="Profil Visa">Profil Visa</option>
+                        <option value="Visa Tourisme & Affaire">Visa Tourisme & Affaire</option>
+                        <option value="Visa Travail">Visa Travail</option>
+                        <option value="Visa Etude">Visa Etude</option>
+                        <option value="Billet d'avion">Billet d'avion</option>
+                        <option value="Assurance Voyage">Assurance Voyage</option>
+                    </select>
+                </div>
+
+                <!-- Clients Table -->
+                <div class="card">
+                    <div class="table-container">
+                        <table class="table" id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>UID</th>
+                                    <th>Nom</th>
+                                    <th>Contact</th>
+                                    <th>Prestation</th>
+                                    <th>Budget</th>
+                                    <th>Statut</th>
+                                    <th>Agent</th>
+                                    <th>Date</th>
+                                    <th class="admin-only">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clientsTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center text-secondary">Aucun client enregistré</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Invoicing Panel -->
+            <section class="panel hidden" id="invoicing-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold text-xl">💰 Gestion de la Facturation</h2>
+                    <div class="flex gap-2">
+                        <button class="btn btn-success admin-only" onclick="exportInvoices()">📊 Exporter</button>
+                        <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
+                            ➕ Nouvelle Facture
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Invoice Stats -->
+                <div class="stats-grid mb-6">
+                    <div class="stat-card">
+                        <div class="stat-value text-primary" id="totalInvoices">0</div>
+                        <div class="stat-label">Factures Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-success" id="paidInvoices">0</div>
+                        <div class="stat-label">Factures Payées</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-warning" id="pendingInvoices">0</div>
+                        <div class="stat-label">En Attente</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-danger" id="overdueInvoices">0</div>
+                        <div class="stat-label">En Retard</div>
+                    </div>
+                </div>
+
+                <!-- Invoices Table -->
+                <div class="card">
+                    <h3>📄 Liste des Factures</h3>
+                    <div class="table-container">
+                        <table class="table" id="invoicesTable">
+                            <thead>
+                                <tr>
+                                    <th>N° Facture</th>
+                                    <th>Client</th>
+                                    <th>Service</th>
+                                    <th>Montant</th>
+                                    <th>Payé</th>
+                                    <th>Restant</th>
+                                    <th>Statut</th>
+                                    <th>Échéance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoicesTableBody">
+                                <tr>
+                                    <td colspan="9" class="text-center text-secondary">Aucune facture enregistrée</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recovery Panel -->
+            <section class="panel hidden" id="recovery-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold text-xl">📞 Processus de Recouvrement</h2>
+                    <button class="btn btn-warning admin-only" onclick="generateRecoveryReport()">
+                        📋 Rapport de Recouvrement
+                    </button>
+                </div>
+
+                <!-- Recovery Stats -->
+                <div class="stats-grid mb-6">
+                    <div class="stat-card">
+                        <div class="stat-value text-danger" id="overdueAmount">0 FCFA</div>
+                        <div class="stat-label">Montant en Retard</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-warning" id="overdueCount">0</div>
+                        <div class="stat-label">Factures en Retard</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-info" id="recoveryRate">0%</div>
+                        <div class="stat-label">Taux de Recouvrement</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-success" id="recoveredThisMonth">0 FCFA</div>
+                        <div class="stat-label">Récupéré ce Mois</div>
+                    </div>
+                </div>
+
+                <!-- Recovery Actions -->
+                <div class="card">
+                    <h3>⚡ Actions de Recouvrement</h3>
+                    <div id="recoveryActions">
+                        <div class="text-center text-secondary">Chargement des actions...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance Panel -->
+            <section class="panel hidden manager-only admin-only" id="performance-panel">
+                <div class="access-denied hidden" id="performance-access-denied">
+                    <div class="access-denied-content">
+                        <h3>🔒 Accès Restreint</h3>
+                        <p>Votre rôle ne vous permet pas d'accéder aux données de Performance.</p>
+                        <p>Seuls les Managers et Administrateurs ont accès aux métriques avancées.</p>
+                    </div>
+                </div>
+                <div id="performance-content">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="font-bold text-xl">📈 Tableau de Performance</h2>
+                        <div class="flex gap-2">
+                            <select class="form-control" id="performancePeriod" style="width: auto;">
+                                <option value="week">Cette semaine</option>
+                                <option value="month" selected>Ce mois</option>
+                                <option value="quarter">Ce trimestre</option>
+                                <option value="year">Cette année</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Performance Metrics -->
+                    <div class="stats-grid mb-6">
+                        <div class="stat-card">
+                            <div class="stat-value text-primary" id="totalRevenue">0 FCFA</div>
+                            <div class="stat-label">Chiffre d'Affaires</div>
+                            <div class="stat-trend trend-up">+25%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value text-success" id="conversionRate">0%</div>
+                            <div class="stat-label">Taux de Conversion</div>
+                            <div class="stat-trend trend-up">+5%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value text-info" id="avgDealSize">0 FCFA</div>
+                            <div class="stat-label">Taille Moyenne Affaire</div>
+                            <div class="stat-trend trend-up">+12%</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value text-warning" id="salesCycle">0 j</div>
+                            <div class="stat-label">Cycle de Vente Moyen</div>
+                            <div class="stat-trend trend-down">-3 jours</div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Charts -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="card">
+                            <h3>📊 Performance par Agent</h3>
+                            <div class="chart-container">
+                                <canvas id="agentPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h3>💰 Évolution Mensuelle</h3>
+                            <div class="chart-container">
+                                <canvas id="monthlyPerformanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics Panel -->
+            <section class="panel hidden admin-only" id="analytics-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold text-xl">📊 Analytics Avancées</h2>
+                    <button class="btn btn-primary" onclick="generateAnalyticsReport()">
+                        📈 Générer Rapport
+                    </button>
+                </div>
+
+                <!-- Analytics Metrics -->
+                <div class="stats-grid mb-6">
+                    <div class="stat-card">
+                        <div class="stat-value text-primary" id="totalCustomers">0</div>
+                        <div class="stat-label">Clients Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-success" id="activeCustomers">0</div>
+                        <div class="stat-label">Clients Actifs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-info" id="customerLifetimeValue">0 FCFA</div>
+                        <div class="stat-label">Valeur Vie Client</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-warning" id="churnRate">0%</div>
+                        <div class="stat-label">Taux d'Attrition</div>
+                    </div>
+                </div>
+
+                <!-- Advanced Charts -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="card">
+                        <h3>📈 Analyse des Tendances</h3>
+                        <div class="chart-container">
+                            <canvas id="trendsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>🎯 Segmentation Clients</h3>
+                        <div class="chart-container">
+                            <canvas id="segmentationChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin Panel -->
+            <section class="panel hidden admin-only" id="admin-panel">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="font-bold text-xl">⚙️ Administration Système</h2>
+                    <button class="btn btn-warning" onclick="exportAllData()">
+                        💾 Exporter Toutes les Données
+                    </button>
+                </div>
+
+                <!-- System Stats -->
+                <div class="stats-grid mb-6">
+                    <div class="stat-card">
+                        <div class="stat-value text-primary" id="systemUsers">4</div>
+                        <div class="stat-label">Utilisateurs Système</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-success" id="systemUptime">99.9%</div>
+                        <div class="stat-label">Disponibilité</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-info" id="dataSize">2.4 MB</div>
+                        <div class="stat-label">Taille Base Données</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value text-warning" id="lastBackup">Aujourd'hui</div>
+                        <div class="stat-label">Dernière Sauvegarde</div>
+                    </div>
+                </div>
+
+                <!-- User Management Section -->
+                <div class="admin-section">
+                    <h4>👥 Gestion des Utilisateurs</h4>
+                    <div class="user-management-grid" id="userManagementGrid">
+                        <!-- Users will be populated by JavaScript -->
+                    </div>
+                    <div class="flex gap-2 mt-4">
+                        <button class="btn btn-primary" onclick="addNewUser()">➕ Ajouter Utilisateur</button>
+                        <button class="btn btn-success" onclick="saveAllUsers()">💾 Sauvegarder Tous</button>
+                        <button class="btn btn-warning" onclick="resetAllPasswords()">🔄 Reset Mots de Passe</button>
+                    </div>
+                </div>
+
+                <!-- Data Management Section -->
+                <div class="admin-section">
+                    <h4>🗃️ Gestion des Données</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="card">
+                            <h5>Clients</h5>
+                            <p>Total: <span id="totalClientsCount">0</span></p>
+                            <div class="user-actions">
+                                <button class="btn btn-sm btn-success" onclick="exportClients()">Exporter</button>
+                                <button class="btn btn-sm btn-warning" onclick="purgeOldClients()">Purger Anciens</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAllClients()">Supprimer Tous</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h5>Factures</h5>
+                            <p>Total: <span id="totalInvoicesCount">0</span></p>
+                            <div class="user-actions">
+                                <button class="btn btn-sm btn-success" onclick="exportInvoices()">Exporter</button>
+                                <button class="btn btn-sm btn-warning" onclick="purgeOldInvoices()">Purger Anciennes</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteAllInvoices()">Supprimer Toutes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Actions -->
+                <div class="admin-section">
+                    <h4>🛠️ Actions Système</h4>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="card">
+                            <h5>Sauvegarde</h5>
+                            <div class="user-actions">
+                                <button class="btn btn-primary" onclick="backupData()">💾 Sauvegarder</button>
+                                <button class="btn btn-secondary" onclick="restoreData()">📂 Restaurer</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h5>Maintenance</h5>
+                            <div class="user-actions">
+                                <button class="btn btn-warning" onclick="optimizeDatabase()">⚡ Optimiser</button>
+                                <button class="btn btn-info" onclick="clearCache()">🧹 Vider Cache</button>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <h5>Logs & Monitoring</h5>
+                            <div class="user-actions">
+                                <button class="btn btn-info" onclick="viewSystemLogs()">📋 Voir Logs</button>
+                                <button class="btn btn-danger" onclick="clearLogs()">🗑️ Effacer Logs</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal for Client Form -->
+    <div class="modal-overlay hidden" id="clientModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter un Client</h3>
+                <button class="close-btn" onclick="closeClientModal()">×</button>
+            </div>
+            <form id="clientForm" class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Nom *</label>
+                    <input type="text" id="clientNom" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prénoms</label>
+                    <input type="text" id="clientPrenoms" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contact *</label>
+                    <input type="text" id="clientContact" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="clientEmail" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Média</label>
+                    <select id="clientMedia" class="form-control">
+                        <option>Facebook</option>
+                        <option>WhatsApp</option>
+                        <option>Instagram</option>
+                        <option>LinkedIn</option>
+                        <option>Site PSI Africa</option>
+                        <option>Référencement</option>
+                        <option>B2B</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Prestation</label>
+                    <select id="clientPrestation" class="form-control">
+                        <option>Profil Visa</option>
+                        <option>Visa Tourisme & Affaire</option>
+                        <option>Visa Travail</option>
+                        <option>Visa Etude</option>
+                        <option>Billet d'avion</option>
+                        <option>Assurance Voyage</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Budget (FCFA)</label>
+                    <input type="number" id="clientBudget" class="form-control" placeholder="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Statut</label>
+                    <select id="clientStatut" class="form-control">
+                        <option>Lead</option>
+                        <option>Prospect</option>
+                        <option>Opportunité</option>
+                        <option>Négociation</option>
+                        <option>Converti</option>
+                        <option>Perdu</option>
+                    </select>
+                </div>
+            </form>
+            
+            <div class="form-group">
+                <label class="form-label">Commentaire</label>
+                <textarea id="clientCommentaire" rows="3" class="form-control" 
+                          placeholder="Notes sur le dossier..."></textarea>
+            </div>
+
+            <div class="flex gap-2 mt-4">
+                <button class="btn btn-success w-full" onclick="saveClient()">💾 Enregistrer</button>
+                <button class="btn w-full" onclick="clearClientForm()">🧹 Effacer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Invoice Form -->
+    <div class="modal-overlay hidden" id="invoiceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Créer une Facture</h3>
+                <button class="close-btn" onclick="closeInvoiceModal()">×</button>
+            </div>
+            <form id="invoiceForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Client *</label>
+                        <select id="invoiceClient" class="form-control" required>
+                            <option value="">Sélectionner un client</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Service *</label>
+                        <select id="invoiceService" class="form-control" required>
+                            <option>Profil Visa</option>
+                            <option>Visa Tourisme & Affaire</option>
+                            <option>Visa Travail</option>
+                            <option>Visa Etude</option>
+                            <option>Billet d'avion</option>
+                            <option>Assurance Voyage</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Montant (FCFA) *</label>
+                        <input type="number" id="invoiceAmount" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date d'échéance *</label>
+                        <input type="date" id="invoiceDueDate" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Notes</label>
+                    <textarea id="invoiceNotes" rows="3" class="form-control" 
+                              placeholder="Notes sur la facture..."></textarea>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button type="button" class="btn btn-success w-full" onclick="createInvoice()">💰 Créer Facture</button>
+                    <button type="button" class="btn w-full" onclick="closeInvoiceModal()">⌫ Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Payment Reminder Modal -->
+    <div class="modal-overlay hidden" id="reminderModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📧 Rappel de Paiement</h3>
+                <button class="close-btn" onclick="closeReminderModal()">×</button>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <div class="text-sm text-secondary">
+                    <strong>Facture:</strong> <span id="reminderInvoiceNumber"></span> |
+                    <strong>Client:</strong> <span id="reminderClientName"></span> |
+                    <strong>Montant dû:</strong> <span id="reminderAmount"></span>
+                </div>
+            </div>
+
+            <!-- Reminder Settings -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="form-group">
+                    <label class="form-label">Ton du message</label>
+                    <select id="reminderTone" class="form-control" onchange="updateReminderMessage()">
+                        <option value="courtois">Courtois</option>
+                        <option value="ferme">Ferme</option>
+                        <option value="dernier">Dernier rappel</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Scénario</label>
+                    <select id="reminderScenario" class="form-control" onchange="updateReminderMessage()">
+                        <option value="j-7">J-7 (Avant échéance)</option>
+                        <option value="j">J (Jour d'échéance)</option>
+                        <option value="j+3">J+3 (3 jours de retard)</option>
+                        <option value="j+10">J+10 (10 jours de retard)</option>
+                        <option value="j+20">J+20 (20 jours de retard)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Channel Tabs -->
+            <div class="nav-tabs" style="margin-bottom: 1rem;">
+                <button class="nav-tab active" onclick="switchReminderChannel('whatsapp')" id="whatsapp-tab">📱 WhatsApp</button>
+                <button class="nav-tab" onclick="switchReminderChannel('email')" id="email-tab">📧 E-mail</button>
+                <button class="nav-tab" onclick="switchReminderChannel('sms')" id="sms-tab">💬 SMS</button>
+            </div>
+
+            <!-- WhatsApp Channel -->
+            <div id="whatsapp-channel" class="reminder-channel">
+                <div class="form-group">
+                    <label class="form-label">Message WhatsApp</label>
+                    <textarea id="whatsappMessage" class="form-control" rows="6" readonly></textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn btn-success" onclick="copyReminderMessage('whatsapp')">📋 Copier</button>
+                        <button class="btn btn-primary" onclick="openWhatsAppWeb()" id="openWhatsAppBtn" style="display: none;">📱 Ouvrir WhatsApp Web</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Channel -->
+            <div id="email-channel" class="reminder-channel hidden">
+                <div class="form-group">
+                    <label class="form-label">Objet de l'e-mail</label>
+                    <input type="text" id="emailSubject" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Corps du message</label>
+                    <textarea id="emailMessage" class="form-control" rows="8" readonly></textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn btn-success" onclick="copyReminderMessage('email')">📋 Copier Tout</button>
+                        <button class="btn btn-info" onclick="copyEmailSubject()">📋 Copier Objet</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMS Channel -->
+            <div id="sms-channel" class="reminder-channel hidden">
+                <div class="form-group">
+                    <label class="form-label">Message SMS <span id="smsLength" class="text-sm text-secondary">(0/160)</span></label>
+                    <textarea id="smsMessage" class="form-control" rows="4" readonly></textarea>
+                    <div class="flex gap-2 mt-2">
+                        <button class="btn btn-success" onclick="copyReminderMessage('sms')">📋 Copier</button>
+                    </div>
+                </div>
+                <div class="text-xs text-warning">
+                    ⚠️ Vérifiez vos obligations légales (opt-in SMS) avant envoi
+                </div>
+            </div>
+
+            <!-- Variables Info -->
+            <div class="card mt-4" style="background: var(--bg-primary); font-size: 0.8rem;">
+                <h5>Variables disponibles:</h5>
+                <div class="grid grid-cols-3 gap-2 text-xs">
+                    <div>{{client_nom}}, {{client_prenoms}}</div>
+                    <div>{{facture_num}}, {{facture_montant}}</div>
+                    <div>{{facture_echeance}}, {{jours_retard}}</div>
+                    <div>{{agent_nom}}, {{lien_paiement}}</div>
+                    <div>{{tel_support}}, {{email_support}}</div>
+                    <div>{{coordonnees_societe}}</div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="text-xs text-secondary mt-3 disclaimer">
+                📋 Les messages sont fournis pour copie/colle uniquement. Vérifiez vos obligations légales (opt-in SMS/email) avant envoi.
+            </div>
+
+            <div class="flex gap-2 mt-4">
+                <button class="btn w-full" onclick="closeReminderModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay hidden" id="addUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ajouter Nouvel Utilisateur</h3>
+                <button class="close-btn" onclick="closeAddUserModal()">×</button>
+            </div>
+            <form id="addUserForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nom d'utilisateur *</label>
+                        <input type="text" id="newUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nom complet *</label>
+                        <input type="text" id="newUserFullName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Mot de passe *</label>
+                        <input type="password" id="newUserPassword" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Rôle *</label>
+                        <select id="newUserRole" class="form-control" required>
+                            <option value="agent">Agent</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Permissions</label>
+                    <div class="permission-grid" id="newUserPermissions">
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-dashboard" checked>
+                            <label for="perm-dashboard">Dashboard</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-clients" checked>
+                            <label for="perm-clients">Clients</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-invoicing" checked>
+                            <label for="perm-invoicing">Facturation</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-recovery" checked>
+                            <label for="perm-recovery">Recouvrement</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-performance">
+                            <label for="perm-performance">Performance</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-analytics">
+                            <label for="perm-analytics">Analytics</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 mt-4">
+                    <button type="button" class="btn btn-success w-full" onclick="createNewUser()">👤 Créer Utilisateur</button>
+                    <button type="button" class="btn w-full" onclick="closeAddUserModal()">⌫ Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <script>
+        // === CONFIGURATION STRICTE ADMIN ===
+        const CONFIG = {
+            VERSION: '6.0.0',
+            STORAGE_KEY: 'psi_crm_data_v6',
+            DEBUG: true,
+            DEMO_USERS: {
+                admin: { 
+                    role: 'admin', 
+                    password: 'PSIAdmin@2024!', 
+                    fullName: 'Administrateur Système',
+                    permissions: ['dashboard', 'clients', 'invoicing', 'recovery', 'performance', 'analytics', 'admin'],
+                    canModify: true,
+                    canDelete: true,
+                    canExport: true,
+                    canCreateInvoice: true,
+                    canRecordPayment: true,
+                    isBlocked: false
+                },
+                manager: { 
+                    role: 'manager', 
+                    password: 'PSIManager@2024!', 
+                    fullName: 'Responsable Opérations',
+                    permissions: ['dashboard', 'clients', 'invoicing', 'recovery', 'performance'],
+                    canModify: true,
+                    canDelete: false,
+                    canExport: true,
+                    canCreateInvoice: true,
+                    canRecordPayment: true,
+                    isBlocked: false
+                },
+                agent1: { 
+                    role: 'agent', 
+                    password: 'PSIAgent@2024!', 
+                    fullName: 'Agent Commercial 1',
+                    permissions: ['clients', 'invoicing', 'recovery'],
+                    canModify: true,
+                    canDelete: false,
+                    canExport: false,
+                    canCreateInvoice: true,
+                    canRecordPayment: true,
+                    isBlocked: false
+                },
+                agent2: { 
+                    role: 'agent', 
+                    password: 'PSIAgent@2024!', 
+                    fullName: 'Agent Commercial 2',
+                    permissions: ['clients', 'invoicing', 'recovery'],
+                    canModify: true,
+                    canDelete: false,
+                    canExport: false,
+                    canCreateInvoice: true,
+                    canRecordPayment: true,
+                    isBlocked: false
+                }
+            }
+        };
+
+        // === ÉTAT GLOBAL ===
+        let currentUser = null;
+        let database = {
+            clients: [],
+            invoices: [],
+            payments: [],
+            activities: [],
+            settings: {},
+            users: CONFIG.DEMO_USERS,
+            reminderTemplates: {},
+            reminderLogs: []
+        };
+        let charts = {};
+        let searchTimeout = null;
+        let currentReminderInvoice = null;
+        let currentReminderChannel = 'whatsapp';
+
+        // === CONTRÔLE D'ACCÈS STRICT ===
+        function hasPermission(permission) {
+            if (!currentUser) return false;
+            
+            // SEUL ADMIN a accès complet
+            if (currentUser.role === 'admin') return true;
+            
+            // Vérifier les permissions spécifiques
+            const userConfig = database.users[currentUser.username];
+            if (!userConfig) return false;
+            
+            // Vérifier si l'utilisateur est bloqué
+            if (userConfig.isBlocked) return false;
+            
+            return userConfig.permissions && userConfig.permissions.includes(permission);
+        }
+
+        function canModifyData() {
+            if (!currentUser) return false;
+            const userConfig = database.users[currentUser.username];
+            return currentUser.role === 'admin' || (userConfig && userConfig.canModify === true);
+        }
+
+        function canDeleteData() {
+            if (!currentUser) return false;
+            const userConfig = database.users[currentUser.username];
+            return currentUser.role === 'admin' || (userConfig && userConfig.canDelete === true);
+        }
+
+        function canExportData() {
+            if (!currentUser) return false;
+            const userConfig = database.users[currentUser.username];
+            return currentUser.role === 'admin' || (userConfig && userConfig.canExport === true);
+        }
+
+        function canCreateInvoice() {
+            if (!currentUser) return false;
+            const userConfig = database.users[currentUser.username];
+            return currentUser.role === 'admin' || (userConfig && userConfig.canCreateInvoice === true);
+        }
+
+        function canRecordPayment() {
+            if (!currentUser) return false;
+            const userConfig = database.users[currentUser.username];
+            return currentUser.role === 'admin' || (userConfig && userConfig.canRecordPayment === true);
+        }
+
+        function enforceAccessControl(panelName) {
+            const panel = document.getElementById(`${panelName}-panel`);
+            if (!panel) return;
+
+            const accessDenied = panel.querySelector('.access-denied');
+            const content = panel.querySelector(`#${panelName}-content`) || panel;
+
+            if (!hasPermission(panelName)) {
+                if (accessDenied) {
+                    accessDenied.classList.remove('hidden');
+                }
+                if (content && content.id !== 'access-denied') {
+                    content.style.display = 'none';
+                }
+            } else {
+                if (accessDenied) {
+                    accessDenied.classList.add('hidden');
+                }
+                if (content) {
+                    content.style.display = 'block';
+                }
+            }
+        }
+
+        // === UTILITAIRES ===
+        function generateUID() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('fr-FR').format(amount || 0) + ' FCFA';
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            try {
+                return new Date(dateStr).toLocaleDateString('fr-FR');
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function debugLog(message, data = null) {
+            if (CONFIG.DEBUG) {
+                console.log(`[PSI CRM] ${message}`, data || '');
+            }
+        }
+
+        function debugError(message, error = null) {
+            console.error(`[PSI CRM ERROR] ${message}`, error || '');
+        }
+
+        function showToast(message, type = 'info') {
+            try {
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                
+                const container = document.getElementById('toastContainer');
+                container.appendChild(toast);
+                
+                setTimeout(() => toast.classList.add('show'), 100);
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => {
+                        if (container.contains(toast)) {
+                            container.removeChild(toast);
+                        }
+                    }, 300);
+                }, 4000);
+            } catch (e) {
+                debugError('Error showing toast', e);
+            }
+        }
+
+        function logActivity(action, details) {
+            try {
+                const activity = {
+                    id: generateUID(),
+                    timestamp: new Date().toISOString(),
+                    user: currentUser?.fullName || 'Système',
+                    action,
+                    details
+                };
+                
+                database.activities.unshift(activity);
+                // Keep only last 100 activities
+                if (database.activities.length > 100) {
+                    database.activities = database.activities.slice(0, 100);
+                }
+                saveData();
+            } catch (e) {
+                debugError('Error logging activity', e);
+            }
+        }
+
+        // === GESTION DES DONNÉES ===
+        function loadData() {
+            try {
+                debugLog('Loading data from localStorage');
+                const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    database = { ...database, ...parsed };
+                    // Ensure users structure is up to date
+                    Object.keys(CONFIG.DEMO_USERS).forEach(username => {
+                        if (!database.users[username]) {
+                            database.users[username] = { ...CONFIG.DEMO_USERS[username] };
+                        } else {
+                            // Update with any new fields from CONFIG
+                            database.users[username] = { ...CONFIG.DEMO_USERS[username], ...database.users[username] };
+                        }
+                    });
+                    
+                    // Initialize reminder templates if missing
+                    if (!database.reminderTemplates) {
+                        database.reminderTemplates = initializeReminderTemplates();
+                    }
+                    
+                    // Initialize reminder logs if missing
+                    if (!database.reminderLogs) {
+                        database.reminderLogs = [];
+                    }
+                    
+                    // Update existing invoices with reminder fields if missing
+                    database.invoices.forEach(invoice => {
+                        if (typeof invoice.remindersCount === 'undefined') {
+                            invoice.remindersCount = 0;
+                        }
+                        if (!invoice.lastReminderAt) {
+                            invoice.lastReminderAt = null;
+                        }
+                    });
+                    
+                } else {
+                    initializeDemoData();
+                }
+            } catch (e) {
+                debugError('Error loading data', e);
+                initializeDemoData();
+            }
+        }
+
+        function saveData() {
+            try {
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(database));
+                return true;
+            } catch (e) {
+                debugError('Error saving data', e);
+                return false;
+            }
+        }
+
+        function initializeDemoData() {
+            // Initialize with sample data
+            const sampleClients = [
+                {
+                    uid: generateUID(),
+                    nom: 'KOUAME',
+                    prenoms: 'Jean-Paul',
+                    contact: '+225 01 02 03 04 05',
+                    email: 'kouame@email.com',
+                    media: 'Facebook',
+                    prestation: 'Visa Etude',
+                    budget: 450000,
+                    statut: 'Opportunité',
+                    agent: 'Agent Commercial 1',
+                    dateCreation: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    commentaire: 'Client prioritaire pour visa étude'
+                },
+                {
+                    uid: generateUID(),
+                    nom: 'N\'GUESSAN',
+                    prenoms: 'Marie Claire',
+                    contact: '+225 07 08 09 10 11',
+                    email: 'nguessan@email.com',
+                    media: 'WhatsApp',
+                    prestation: 'Visa Travail',
+                    budget: 680000,
+                    statut: 'Converti',
+                    agent: 'Agent Commercial 2',
+                    dateCreation: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    commentaire: 'Dossier finalisé avec succès'
+                },
+                {
+                    uid: generateUID(),
+                    nom: 'TRAORE',
+                    prenoms: 'Abdoulaye',
+                    contact: '+225 05 06 07 08 09',
+                    email: 'traore@email.com',
+                    media: 'Site PSI Africa',
+                    prestation: 'Visa Tourisme & Affaire',
+                    budget: 320000,
+                    statut: 'Négociation',
+                    agent: 'Agent Commercial 1',
+                    dateCreation: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    commentaire: 'En cours de négociation'
+                }
+            ];
+
+            database.clients = sampleClients;
+
+            database.invoices = [
+                {
+                    id: generateUID(),
+                    number: 'PSI-2024-0001',
+                    clientId: sampleClients[0].uid,
+                    clientName: 'KOUAME Jean-Paul',
+                    service: 'Visa Etude',
+                    amount: 450000,
+                    paidAmount: 225000,
+                    status: 'partial',
+                    issueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    agent: 'Agent Commercial 1',
+                    notes: 'Acompte de 50% reçu',
+                    remindersCount: 0,
+                    lastReminderAt: null
+                },
+                {
+                    id: generateUID(),
+                    number: 'PSI-2024-0002',
+                    clientId: sampleClients[1].uid,
+                    clientName: 'N\'GUESSAN Marie Claire',
+                    service: 'Visa Travail',
+                    amount: 680000,
+                    paidAmount: 680000,
+                    status: 'paid',
+                    issueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    agent: 'Agent Commercial 2',
+                    notes: 'Paiement intégral reçu',
+                    remindersCount: 0,
+                    lastReminderAt: null
+                }
+            ];
+
+            database.activities = [
+                {
+                    id: generateUID(),
+                    timestamp: new Date().toISOString(),
+                    user: 'Système',
+                    action: 'Initialisation',
+                    details: 'Données de démonstration créées'
+                }
+            ];
+
+            // Initialize reminder templates
+            database.reminderTemplates = initializeReminderTemplates();
+            database.reminderLogs = [];
+
+            saveData();
+        }
+
+        // === SYSTÈME DE RAPPELS DE PAIEMENT ===
+        function initializeReminderTemplates() {
+            return {
+                whatsapp: {
+                    courtois: {
+                        'j-7': "Bonjour {{client_prenoms}}, ici {{agent_nom}} de {{coordonnees_societe}}. 📝 Petit rappel : la facture {{facture_num}} ({{facture_montant}} {{facture_devise}}) arrive à échéance le {{facture_echeance}}. 💳 Paiement sécurisé : {{lien_paiement}}. Merci !",
+                        'j': "Bonjour {{client_prenoms}}, votre facture {{facture_num}} ({{facture_montant}} {{facture_devise}}) est due aujourd'hui. 💳 Lien de paiement : {{lien_paiement}}. Merci de votre confiance ! - {{agent_nom}}",
+                        'j+3': "Bonjour {{client_prenoms}}, votre facture {{facture_num}} est en retard de {{jours_retard}} jours ({{facture_montant}} {{facture_devise}}). 💳 Merci de régulariser via : {{lien_paiement}}. Cordialement, {{agent_nom}}",
+                        'j+10': "Bonjour {{client_prenoms}}, sauf erreur, la facture {{facture_num}} reste impayée ({{facture_montant}} {{facture_devise}}), échéance {{facture_echeance}} ({{jours_retard}} jours). Merci d'effectuer le règlement sous 48h : {{lien_paiement}}. Besoin d'aide ? {{tel_support}}",
+                        'j+20': "Bonjour {{client_prenoms}}, votre facture {{facture_num}} ({{facture_montant}} {{facture_devise}}) est en retard de {{jours_retard}} jours. Merci de régulariser rapidement : {{lien_paiement}}. Contact : {{tel_support}}"
+                    },
+                    ferme: {
+                        'j-7': "{{client_prenoms}}, facture {{facture_num}} ({{facture_montant}} {{facture_devise}}) échéance {{facture_echeance}}. Paiement : {{lien_paiement}} - {{coordonnees_societe}}",
+                        'j': "{{client_prenoms}}, facture {{facture_num}} due AUJOURD'HUI ({{facture_montant}} {{facture_devise}}). Paiement immédiat requis : {{lien_paiement}}",
+                        'j+3': "{{client_prenoms}}, facture {{facture_num}} EN RETARD de {{jours_retard}} jours. Montant : {{facture_montant}} {{facture_devise}}. Régularisation immédiate : {{lien_paiement}}",
+                        'j+10': "{{client_prenoms}}, MISE EN DEMEURE - Facture {{facture_num}} impayée depuis {{jours_retard}} jours ({{facture_montant}} {{facture_devise}}). Règlement sous 48h IMPÉRATIF : {{lien_paiement}}. Support : {{tel_support}}",
+                        'j+20': "{{client_prenoms}}, DERNIÈRE RELANCE - {{jours_retard}} jours de retard pour facture {{facture_num}} ({{facture_montant}} {{facture_devise}}). Sans règlement sous 24h, transmission au contentieux. {{lien_paiement}}"
+                    },
+                    dernier: {
+                        'j+20': "DERNIER RAPPEL : {{client_prenoms}}, facture {{facture_num}} en retard de {{jours_retard}} jours ({{facture_montant}} {{facture_devise}}). Sans paiement sous 24h, dossier transmis pour procédure. Paiement : {{lien_paiement}}"
+                    }
+                },
+                email: {
+                    courtois: {
+                        'j-7': {
+                            subject: "Rappel d'échéance – Facture {{facture_num}} ({{facture_echeance}})",
+                            body: "Bonjour {{client_prenoms}} {{client_nom}},\n\nNous vous rappelons l'échéance de la facture {{facture_num}} d'un montant de {{facture_montant}} {{facture_devise}}, due le {{facture_echeance}}.\n\nVous pouvez effectuer votre paiement via le lien sécurisé : {{lien_paiement}}\n\nNous restons à votre disposition pour toute question.\n\nCordialement,\n{{agent_nom}}\n{{coordonnees_societe}}\n{{tel_support}} | {{email_support}}"
+                        },
+                        'j': {
+                            subject: "Échéance aujourd'hui – Facture {{facture_num}}",
+                            body: "Bonjour {{client_prenoms}} {{client_nom}},\n\nVotre facture {{facture_num}} d'un montant de {{facture_montant}} {{facture_devise}} arrive à échéance aujourd'hui.\n\nMerci d'effectuer votre paiement via : {{lien_paiement}}\n\nCordialement,\n{{agent_nom}}\n{{coordonnees_societe}}"
+                        },
+                        'j+3': {
+                            subject: "Relance amicale – Facture {{facture_num}} ({{jours_retard}} jours)",
+                            body: "Bonjour {{client_prenoms}} {{client_nom}},\n\nVotre facture {{facture_num}} ({{facture_montant}} {{facture_devise}}) présente un retard de {{jours_retard}} jours depuis l'échéance du {{facture_echeance}}.\n\nMerci de bien vouloir régulariser votre situation via : {{lien_paiement}}\n\nSi vous rencontrez des difficultés, n'hésitez pas à nous contacter.\n\nCordialement,\n{{agent_nom}}\n{{tel_support}} | {{email_support}}"
+                        }
+                    },
+                    ferme: {
+                        'j+10': {
+                            subject: "Relance de paiement – Facture {{facture_num}} (retard {{jours_retard}} j)",
+                            body: "Madame, Monsieur {{client_nom}},\n\nNous constatons que votre facture {{facture_num}} d'un montant de {{facture_montant}} {{facture_devise}} demeure impayée {{jours_retard}} jours après l'échéance du {{facture_echeance}}.\n\nNous vous demandons de procéder au règlement sous 48 heures via : {{lien_paiement}}\n\nÀ défaut, nous nous verrions contraints d'engager des procédures de recouvrement.\n\nPour toute question : {{tel_support}} | {{email_support}}\n\nCordialement,\n{{agent_nom}}\n{{coordonnees_societe}}"
+                        }
+                    }
+                },
+                sms: {
+                    courtois: {
+                        'j': "Rappel facture {{facture_num}} ({{facture_montant}} {{facture_devise}}), échéance {{facture_echeance}}. Paiement: {{lien_paiement}} – {{coordonnees_societe}}",
+                        'j+3': "Facture {{facture_num}} en retard de {{jours_retard}} jours ({{facture_montant}} {{facture_devise}}). Merci de régler: {{lien_paiement}}"
+                    },
+                    ferme: {
+                        'j+10': "Facture {{facture_num}} en retard ({{jours_retard}} j). Merci de régler sous 48h: {{lien_paiement}}. Aide: {{tel_support}}",
+                        'j+20': "URGENT: Facture {{facture_num}} retard {{jours_retard}} jours. Réglement immédiat: {{lien_paiement}} ou contentieux"
+                    }
+                }
+            };
+        }
+
+        function openReminderModal(invoiceId) {
+            const invoice = database.invoices.find(inv => inv.id === invoiceId);
+            const client = database.clients.find(c => c.uid === invoice.clientId);
+            
+            if (!invoice || !client) {
+                showToast('Facture ou client introuvable', 'error');
+                return;
+            }
+
+            currentReminderInvoice = invoice;
+            
+            // Fill invoice info
+            document.getElementById('reminderInvoiceNumber').textContent = invoice.number;
+            document.getElementById('reminderClientName').textContent = invoice.clientName;
+            document.getElementById('reminderAmount').textContent = formatCurrency(invoice.amount - (invoice.paidAmount || 0));
+
+            // Set default scenario based on due date
+            const today = new Date();
+            const dueDate = new Date(invoice.dueDate);
+            const daysDiff = Math.floor((today - dueDate) / (1000 * 60 * 60 * 24));
+            
+            let defaultScenario = 'j';
+            if (daysDiff < -3) defaultScenario = 'j-7';
+            else if (daysDiff > 0 && daysDiff <= 5) defaultScenario = 'j+3';
+            else if (daysDiff > 5 && daysDiff <= 15) defaultScenario = 'j+10';
+            else if (daysDiff > 15) defaultScenario = 'j+20';
+
+            document.getElementById('reminderScenario').value = defaultScenario;
+            
+            // Auto-select tone based on days overdue
+            let defaultTone = 'courtois';
+            if (daysDiff > 15) defaultTone = 'ferme';
+            if (daysDiff > 30) defaultTone = 'dernier';
+            
+            document.getElementById('reminderTone').value = defaultTone;
+
+            // Switch to WhatsApp channel by default
+            switchReminderChannel('whatsapp');
+            updateReminderMessage();
+
+            // Show modal
+            document.getElementById('reminderModal').classList.remove('hidden');
+        }
+
+        function closeReminderModal() {
+            document.getElementById('reminderModal').classList.add('hidden');
+            currentReminderInvoice = null;
+        }
+
+        function switchReminderChannel(channel) {
+            currentReminderChannel = channel;
+            
+            // Update tabs
+            document.querySelectorAll('#reminderModal .nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(`${channel}-tab`).classList.add('active');
+
+            // Update channels
+            document.querySelectorAll('.reminder-channel').forEach(ch => {
+                ch.classList.add('hidden');
+            });
+            document.getElementById(`${channel}-channel`).classList.remove('hidden');
+
+            updateReminderMessage();
+        }
+
+        function updateReminderMessage() {
+            if (!currentReminderInvoice) return;
+
+            const tone = document.getElementById('reminderTone').value;
+            const scenario = document.getElementById('reminderScenario').value;
+            const channel = currentReminderChannel;
+
+            const template = getReminderTemplate(channel, tone, scenario);
+            if (!template) return;
+
+            const variables = buildReminderVariables(currentReminderInvoice);
+            
+            if (channel === 'email') {
+                const subject = resolveTemplate(template.subject, variables);
+                const body = resolveTemplate(template.body, variables);
+                document.getElementById('emailSubject').value = subject;
+                document.getElementById('emailMessage').value = body;
+            } else if (channel === 'sms') {
+                const message = resolveTemplate(template, variables);
+                document.getElementById('smsMessage').value = message;
+                document.getElementById('smsLength').textContent = `(${message.length}/160)`;
+            } else {
+                const message = resolveTemplate(template, variables);
+                document.getElementById('whatsappMessage').value = message;
+            }
+        }
+
+        function getReminderTemplate(channel, tone, scenario) {
+            const templates = database.reminderTemplates || initializeReminderTemplates();
+            
+            if (templates[channel] && templates[channel][tone] && templates[channel][tone][scenario]) {
+                return templates[channel][tone][scenario];
+            }
+            
+            // Fallback to courtois if tone not found
+            if (templates[channel] && templates[channel]['courtois'] && templates[channel]['courtois'][scenario]) {
+                return templates[channel]['courtois'][scenario];
+            }
+
+            return null;
+        }
+
+        function buildReminderVariables(invoice) {
+            const client = database.clients.find(c => c.uid === invoice.clientId);
+            const today = new Date();
+            const dueDate = new Date(invoice.dueDate);
+            const jours_retard = Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
+
+            return {
+                client_nom: client?.nom || '[NOM_CLIENT]',
+                client_prenoms: client?.prenoms || '[PRENOMS_CLIENT]',
+                client_entreprise: client?.entreprise || '',
+                facture_num: invoice.number,
+                facture_montant: new Intl.NumberFormat('fr-FR').format(invoice.amount - (invoice.paidAmount || 0)),
+                facture_devise: 'FCFA',
+                facture_echeance: formatDate(invoice.dueDate),
+                jours_retard: jours_retard,
+                agent_nom: currentUser?.fullName || invoice.agent,
+                lien_paiement: database.settings?.lien_paiement || 'https://psi-africa.com/paiement/[INVOICE_ID]',
+                coordonnees_societe: 'PSI Africa',
+                email_support: 'support@psi-africa.com',
+                tel_support: '+225 XX XX XX XX XX'
+            };
+        }
+
+        function resolveTemplate(template, variables) {
+            if (!template) return '';
+            
+            let resolved = template;
+            Object.keys(variables).forEach(key => {
+                const regex = new RegExp(`{{${key}}}`, 'g');
+                resolved = resolved.replace(regex, variables[key]);
+            });
+            
+            return resolved;
+        }
+
+        function copyReminderMessage(channel) {
+            let textToCopy = '';
+            
+            if (channel === 'email') {
+                const subject = document.getElementById('emailSubject').value;
+                const body = document.getElementById('emailMessage').value;
+                textToCopy = `Objet: ${subject}\n\n${body}`;
+            } else if (channel === 'sms') {
+                textToCopy = document.getElementById('smsMessage').value;
+            } else {
+                textToCopy = document.getElementById('whatsappMessage').value;
+            }
+
+            // Copy to clipboard
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showToast('Message copié dans le presse-papiers', 'success');
+                
+                // Log the reminder
+                logReminder(channel, textToCopy);
+                
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = textToCopy;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                showToast('Message copié', 'success');
+                logReminder(channel, textToCopy);
+            });
+        }
+
+        function copyEmailSubject() {
+            const subject = document.getElementById('emailSubject').value;
+            navigator.clipboard.writeText(subject).then(() => {
+                showToast('Objet copié dans le presse-papiers', 'success');
+            }).catch(() => {
+                showToast('Erreur lors de la copie', 'error');
+            });
+        }
+
+        function logReminder(channel, message) {
+            if (!currentReminderInvoice) return;
+
+            const tone = document.getElementById('reminderTone').value;
+            const scenario = document.getElementById('reminderScenario').value;
+            
+            const reminderLog = {
+                id: generateUID(),
+                invoiceId: currentReminderInvoice.id,
+                clientId: currentReminderInvoice.clientId,
+                channel: channel,
+                tone: tone,
+                scenario: scenario,
+                messageRendered: message,
+                actorId: currentUser?.username || 'system',
+                createdAt: new Date().toISOString()
+            };
+
+            database.reminderLogs.unshift(reminderLog);
+            
+            // Update invoice counters
+            currentReminderInvoice.remindersCount = (currentReminderInvoice.remindersCount || 0) + 1;
+            currentReminderInvoice.lastReminderAt = new Date().toISOString();
+            
+            saveData();
+            
+            logActivity('Rappel de Paiement', `Rappel ${channel} envoyé pour facture ${currentReminderInvoice.number} (${tone}/${scenario})`);
+        }
+
+        function openWhatsAppWeb() {
+            if (!currentReminderInvoice) return;
+            
+            const client = database.clients.find(c => c.uid === currentReminderInvoice.clientId);
+            const message = document.getElementById('whatsappMessage').value;
+            
+            if (client && client.contact) {
+                // Clean phone number for WhatsApp
+                const phone = client.contact.replace(/[^0-9]/g, '');
+                const whatsappUrl = `https://web.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+                
+                logReminder('whatsapp', message);
+                showToast('WhatsApp Web ouvert', 'info');
+            } else {
+                showToast('Numéro de téléphone client manquant', 'error');
+            }
+        }
+
+        // === AUTHENTIFICATION RENFORCÉE ===
+        function prefillDemo(username) {
+            const user = CONFIG.DEMO_USERS[username];
+            if (user) {
+                document.getElementById('loginUsername').value = username;
+                document.getElementById('loginPassword').value = user.password;
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim().toLowerCase();
+            const password = document.getElementById('loginPassword').value;
+            const errorDiv = document.getElementById('loginError');
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (errorDiv) errorDiv.classList.add('hidden');
+
+            if (!username || !password) {
+                showError('Veuillez remplir tous les champs');
+                return;
+            }
+
+            if (loginBtn) {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Connexion...';
+            }
+
+            setTimeout(() => {
+                const user = database.users[username];
+                if (!user || user.password !== password) {
+                    showError('Identifiants incorrects');
+                    if (loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Se connecter';
+                    }
+                    return;
+                }
+
+                // Vérifier si l'utilisateur est bloqué
+                if (user.isBlocked) {
+                    showError('Votre compte est bloqué. Contactez l\'administrateur.');
+                    if (loginBtn) {
+                        loginBtn.disabled = false;
+                        loginBtn.textContent = 'Se connecter';
+                    }
+                    return;
+                }
+
+                loginUser(username, user);
+            }, 500);
+        }
+
+        function loginUser(username, user) {
+            currentUser = {
+                username,
+                role: user.role,
+                fullName: user.fullName,
+                permissions: user.permissions || [],
+                canModify: user.canModify || false,
+                canDelete: user.canDelete || false,
+                canExport: user.canExport || false
+            };
+
+            // Force admin permissions
+            if (user.role === 'admin') {
+                currentUser.canModify = true;
+                currentUser.canDelete = true;
+                currentUser.canExport = true;
+            }
+
+            document.body.setAttribute('data-auth', 'true');
+            document.body.setAttribute('data-role', user.role);
+
+            const currentUserElement = document.getElementById('currentUser');
+            const currentRoleElement = document.getElementById('currentRole');
+            const userInitials = document.getElementById('userInitials');
+            
+            if (currentUserElement) currentUserElement.textContent = user.fullName;
+            if (currentRoleElement) currentRoleElement.textContent = user.role.toUpperCase();
+            if (userInitials) userInitials.textContent = user.fullName.charAt(0);
+
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Se connecter';
+            }
+
+            logActivity('Connexion', `${user.fullName} s'est connecté`);
+            
+            setTimeout(() => {
+                initializeDashboard();
+                updateTabVisibility();
+                showToast(`Bienvenue ${user.fullName}`, 'success');
+            }, 500);
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+            }
+            
+            const modal = document.querySelector('.auth-content');
+            if (modal) {
+                modal.classList.add('shake');
+                setTimeout(() => modal.classList.remove('shake'), 500);
+            }
+        }
+
+        function logout() {
+            if (currentUser && confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                logActivity('Déconnexion', `${currentUser.fullName} s'est déconnecté`);
+                currentUser = null;
+                document.body.setAttribute('data-auth', 'false');
+                document.body.setAttribute('data-role', '');
+                showToast('Déconnexion réussie', 'warning');
+            }
+        }
+
+        // === NAVIGATION AVEC CONTRÔLE D'ACCÈS ===
+        function initializeNavigation() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const panel = tab.getAttribute('data-panel');
+                    if (panel && validatePanelAccess(panel)) {
+                        switchToPanel(panel);
+                    } else {
+                        showToast('Accès non autorisé à cette section', 'error');
+                    }
+                });
+            });
+        }
+
+        function switchToPanel(panelName) {
+            // Update tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const activeTab = document.querySelector(`[data-panel="${panelName}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
+            // Update panels
+            document.querySelectorAll('.panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            const targetPanel = document.getElementById(`${panelName}-panel`);
+            if (targetPanel) {
+                targetPanel.classList.remove('hidden');
+                enforceAccessControl(panelName);
+                loadPanelContent(panelName);
+            }
+        }
+
+        function validatePanelAccess(panelName) {
+            return hasPermission(panelName);
+        }
+
+        function updateTabVisibility() {
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                const panel = tab.getAttribute('data-panel');
+                if (!hasPermission(panel)) {
+                    tab.style.display = 'none';
+                } else {
+                    tab.style.display = 'flex';
+                }
+            });
+            
+            // Redirect to first allowed panel if current is not allowed
+            const currentPanel = document.querySelector('.panel:not(.hidden)');
+            if (currentPanel) {
+                const panelName = currentPanel.id.replace('-panel', '');
+                if (!hasPermission(panelName)) {
+                    // Find first allowed panel
+                    const allowedPanels = ['dashboard', 'clients', 'invoicing', 'recovery', 'performance', 'analytics', 'admin'];
+                    for (const panel of allowedPanels) {
+                        if (hasPermission(panel)) {
+                            switchToPanel(panel);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        function loadPanelContent(panelName) {
+            switch (panelName) {
+                case 'dashboard':
+                    if (hasPermission('dashboard')) loadDashboard();
+                    break;
+                case 'clients':
+                    if (hasPermission('clients')) loadClientsPanel();
+                    break;
+                case 'invoicing':
+                    if (hasPermission('invoicing')) loadInvoicingPanel();
+                    break;
+                case 'recovery':
+                    if (hasPermission('recovery')) loadRecoveryPanel();
+                    break;
+                case 'performance':
+                    if (hasPermission('performance')) loadPerformancePanel();
+                    break;
+                case 'analytics':
+                    if (hasPermission('analytics')) loadAnalyticsPanel();
+                    break;
+                case 'admin':
+                    if (hasPermission('admin')) loadAdminPanel();
+                    break;
+            }
+        }
+
+        // === DASHBOARD ===
+        function initializeDashboard() {
+            if (hasPermission('dashboard')) {
+                loadDashboard();
+            } else {
+                // Redirect to first allowed panel
+                const allowedPanels = ['clients', 'invoicing', 'recovery'];
+                for (const panel of allowedPanels) {
+                    if (hasPermission(panel)) {
+                        switchToPanel(panel);
+                        break;
+                    }
+                }
+            }
+            updateNotificationBadges();
+        }
+
+        function loadDashboard() {
+            if (!hasPermission('dashboard')) {
+                enforceAccessControl('dashboard');
+                return;
+            }
+
+            const dateElement = document.getElementById('dashboardDate');
+            if (dateElement) {
+                dateElement.textContent = new Date().toLocaleDateString('fr-FR', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            const stats = calculateKPIs();
+            renderKPIStats(stats);
+            renderRecentActivity();
+            initializeDashboardCharts();
+        }
+
+        function calculateKPIs() {
+            const totalClients = database.clients.length;
+            const conversions = database.clients.filter(c => c.statut === 'Converti').length;
+            const conversionRate = totalClients > 0 ? ((conversions / totalClients) * 100).toFixed(1) : 0;
+            
+            const totalInvoiced = database.invoices.reduce((sum, inv) => sum + inv.amount, 0);
+            const totalPaid = database.invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+            const overdueInvoices = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            ).length;
+
+            return { totalClients, conversionRate, totalInvoiced, totalPaid, overdueInvoices };
+        }
+
+        function renderKPIStats(stats) {
+            const container = document.getElementById('kpiStats');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value text-primary">${stats.totalClients}</div>
+                    <div class="stat-label">Clients Total</div>
+                    <div class="stat-trend trend-up">+12%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-success">${stats.conversionRate}%</div>
+                    <div class="stat-label">Taux Conversion</div>
+                    <div class="stat-trend trend-up">+5%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-info">${formatCurrency(stats.totalInvoiced)}</div>
+                    <div class="stat-label">CA Facturé</div>
+                    <div class="stat-trend trend-up">+18%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-success">${formatCurrency(stats.totalPaid)}</div>
+                    <div class="stat-label">CA Encaissé</div>
+                    <div class="stat-trend trend-up">+15%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value text-danger">${stats.overdueInvoices}</div>
+                    <div class="stat-label">Factures en Retard</div>
+                    <div class="stat-trend ${stats.overdueInvoices > 0 ? 'trend-down' : 'trend-up'}">
+                        ${stats.overdueInvoices > 0 ? 'Action requise' : 'Excellent'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRecentActivity() {
+            const container = document.getElementById('recentActivity');
+            if (!container) return;
+
+            const recentActivities = database.activities.slice(0, 5);
+            
+            if (recentActivities.length === 0) {
+                container.innerHTML = '<div class="text-center text-secondary">Aucune activité récente</div>';
+                return;
+            }
+
+            container.innerHTML = recentActivities.map(activity => `
+                <div class="flex items-center justify-between py-3" style="border-bottom: 1px solid var(--border);">
+                    <div>
+                        <div class="font-semibold">${activity.action}</div>
+                        <div class="text-sm text-secondary">${activity.details}</div>
+                        <div class="text-xs text-muted">${activity.user}</div>
+                    </div>
+                    <div class="text-xs text-secondary">
+                        ${formatDate(activity.timestamp)}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function initializeDashboardCharts() {
+            if (!hasPermission('dashboard')) return;
+
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart');
+            if (revenueCtx && !charts.revenueChart) {
+                charts.revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                        datasets: [{
+                            label: 'Chiffre d\'Affaires',
+                            data: [2000000, 2500000, 1800000, 3200000, 2800000, 3500000],
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            },
+                            x: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Status Chart
+            const statusCtx = document.getElementById('statusChart');
+            if (statusCtx && !charts.statusChart) {
+                const statusCounts = {};
+                database.clients.forEach(client => {
+                    statusCounts[client.statut] = (statusCounts[client.statut] || 0) + 1;
+                });
+
+                charts.statusChart = new Chart(statusCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(statusCounts),
+                        datasets: [{
+                            data: Object.values(statusCounts),
+                            backgroundColor: [
+                                '#f59e0b',
+                                '#06b6d4',
+                                '#16a34a',
+                                '#2563eb',
+                                '#ef4444',
+                                '#8b5cf6'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateNotificationBadges() {
+            const overdueInvoices = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            ).length;
+            
+            const invoiceNotif = document.getElementById('invoiceNotif');
+            const recoveryNotif = document.getElementById('recoveryNotif');
+            const notifCount = document.getElementById('notifCount');
+            
+            if (overdueInvoices > 0) {
+                [invoiceNotif, recoveryNotif, notifCount].forEach(element => {
+                    if (element) {
+                        element.textContent = overdueInvoices;
+                        element.classList.remove('hidden');
+                    }
+                });
+            } else {
+                [invoiceNotif, recoveryNotif, notifCount].forEach(element => {
+                    if (element) {
+                        element.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        // === MODULE CLIENTS ===
+        function loadClientsPanel() {
+            if (!hasPermission('clients')) {
+                enforceAccessControl('clients');
+                return;
+            }
+            renderClientsTable();
+            initializeClientSearch();
+        }
+
+        function initializeClientSearch() {
+            const searchInput = document.getElementById('clientSearch');
+            const statusFilter = document.getElementById('statusFilter');
+            const prestationFilter = document.getElementById('prestationFilter');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => filterClients(), 300);
+                });
+            }
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', filterClients);
+            }
+
+            if (prestationFilter) {
+                prestationFilter.addEventListener('change', filterClients);
+            }
+        }
+
+        function filterClients() {
+            const searchTerm = document.getElementById('clientSearch')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('statusFilter')?.value || '';
+            const prestationFilter = document.getElementById('prestationFilter')?.value || '';
+
+            const filtered = database.clients.filter(client => {
+                const matchesSearch = !searchTerm || 
+                    client.nom.toLowerCase().includes(searchTerm) ||
+                    client.prenoms?.toLowerCase().includes(searchTerm) ||
+                    client.contact.includes(searchTerm) ||
+                    client.email?.toLowerCase().includes(searchTerm);
+
+                const matchesStatus = !statusFilter || client.statut === statusFilter;
+                const matchesPrestation = !prestationFilter || client.prestation === prestationFilter;
+
+                return matchesSearch && matchesStatus && matchesPrestation;
+            });
+
+            renderClientsTable(filtered);
+        }
+
+        function showAddClientModal() {
+            document.getElementById('clientModal').classList.remove('hidden');
+        }
+
+        function closeClientModal() {
+            document.getElementById('clientModal').classList.add('hidden');
+            clearClientForm();
+        }
+
+        function saveClient() {
+            if (!canModifyData()) {
+                showToast('Vous n\'avez pas les permissions pour ajouter des clients', 'error');
+                return;
+            }
+
+            const nom = document.getElementById('clientNom').value.trim();
+            const contact = document.getElementById('clientContact').value.trim();
+            
+            if (!nom || !contact) {
+                showToast('Le nom et le contact sont obligatoires', 'error');
+                return;
+            }
+
+            const client = {
+                uid: generateUID(),
+                nom,
+                prenoms: document.getElementById('clientPrenoms').value.trim(),
+                contact,
+                email: document.getElementById('clientEmail').value.trim(),
+                media: document.getElementById('clientMedia').value,
+                prestation: document.getElementById('clientPrestation').value,
+                budget: parseFloat(document.getElementById('clientBudget').value) || 0,
+                statut: document.getElementById('clientStatut').value,
+                agent: currentUser?.fullName || 'Agent',
+                dateCreation: new Date().toISOString().split('T')[0],
+                commentaire: document.getElementById('clientCommentaire').value.trim()
+            };
+
+            database.clients.unshift(client);
+            saveData();
+            
+            logActivity('Nouveau Client', `${client.nom} ${client.prenoms} ajouté`);
+            showToast('Client enregistré avec succès', 'success');
+            
+            closeClientModal();
+            renderClientsTable();
+            updateInvoiceClientSelect();
+        }
+
+        function clearClientForm() {
+            document.getElementById('clientForm').reset();
+            document.getElementById('clientCommentaire').value = '';
+        }
+
+        function renderClientsTable(clientsToRender = null) {
+            const tbody = document.getElementById('clientsTableBody');
+            if (!tbody) return;
+
+            const clients = clientsToRender || database.clients;
+
+            if (clients.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary">Aucun client trouvé</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = clients.map(client => `
+                <tr>
+                    <td class="text-xs font-mono">${client.uid.substring(0, 8)}...</td>
+                    <td>
+                        <div class="font-semibold">${client.nom} ${client.prenoms || ''}</div>
+                        <div class="text-xs text-secondary">${client.email || ''}</div>
+                    </td>
+                    <td>${client.contact}</td>
+                    <td>${client.prestation}</td>
+                    <td>${formatCurrency(client.budget)}</td>
+                    <td><span class="badge ${getStatusBadgeClass(client.statut)}">${client.statut}</span></td>
+                    <td class="text-sm">${client.agent}</td>
+                    <td>${formatDate(client.dateCreation)}</td>
+                    <td class="admin-only">
+                        <div class="flex gap-1">
+                            <button class="btn btn-sm" onclick="viewClient('${client.uid}')" title="Voir détails">👁️</button>
+                            ${canModifyData() ? `<button class="btn btn-sm" onclick="editClient('${client.uid}')" title="Modifier">✏️</button>` : ''}
+                            <button class="btn btn-sm btn-primary" onclick="createInvoiceForClient('${client.uid}')" title="Créer facture">💰</button>
+                            ${canDeleteData() ? `<button class="btn btn-sm btn-danger" onclick="deleteClient('${client.uid}')" title="Supprimer">🗑️</button>` : ''}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getStatusBadgeClass(status) {
+            const classes = {
+                'Lead': 'badge-info',
+                'Prospect': 'badge-warning',
+                'Opportunité': 'badge-primary',
+                'Négociation': 'badge-warning',
+                'Converti': 'badge-success',
+                'Perdu': 'badge-danger'
+            };
+            return classes[status] || 'badge-info';
+        }
+
+        function viewClient(id) {
+            const client = database.clients.find(c => c.uid === id);
+            if (client) {
+                const info = `CLIENT: ${client.nom} ${client.prenoms || ''}\nContact: ${client.contact}\nEmail: ${client.email || 'Non renseigné'}\nPrestation: ${client.prestation}\nStatut: ${client.statut}\nBudget: ${formatCurrency(client.budget)}\nAgent: ${client.agent}\nDate: ${formatDate(client.dateCreation)}${client.commentaire ? '\nCommentaire: ' + client.commentaire : ''}`;
+                alert(info);
+            }
+        }
+
+        function editClient(id) {
+            if (!canModifyData()) {
+                showToast('Vous n\'avez pas les permissions pour modifier des clients', 'error');
+                return;
+            }
+
+            const client = database.clients.find(c => c.uid === id);
+            if (client) {
+                const newStatus = prompt(`Nouveau statut pour ${client.nom}:`, client.statut);
+                if (newStatus && newStatus !== client.statut) {
+                    client.statut = newStatus;
+                    saveData();
+                    logActivity('Modification Client', `Statut changé: ${client.nom} -> ${newStatus}`);
+                    showToast(`Statut de ${client.nom} mis à jour`, 'success');
+                    renderClientsTable();
+                }
+            }
+        }
+
+        function deleteClient(id) {
+            if (!canDeleteData()) {
+                showToast('Vous n\'avez pas les permissions pour supprimer des clients', 'error');
+                return;
+            }
+
+            const client = database.clients.find(c => c.uid === id);
+            if (client && confirm(`Êtes-vous sûr de vouloir supprimer le client ${client.nom} ${client.prenoms || ''} ?`)) {
+                database.clients = database.clients.filter(c => c.uid !== id);
+                saveData();
+                logActivity('Suppression Client', `Client ${client.nom} supprimé`);
+                showToast(`Client ${client.nom} supprimé`, 'warning');
+                renderClientsTable();
+            }
+        }
+
+        function createInvoiceForClient(id) {
+            const client = database.clients.find(c => c.uid === id);
+            if (client) {
+                // Pre-fill invoice form
+                document.getElementById('invoiceClient').value = client.uid;
+                document.getElementById('invoiceService').value = client.prestation;
+                document.getElementById('invoiceAmount').value = client.budget || 0;
+                
+                // Set due date to 30 days from now
+                const dueDate = new Date();
+                dueDate.setDate(dueDate.getDate() + 30);
+                document.getElementById('invoiceDueDate').value = dueDate.toISOString().split('T')[0];
+                
+                showCreateInvoiceModal();
+            }
+        }
+
+        function exportClients() {
+            if (!canExportData()) {
+                showToast('Vous n\'avez pas les permissions pour exporter des données', 'error');
+                return;
+            }
+
+            const csvContent = convertToCSV(database.clients, [
+                'uid', 'nom', 'prenoms', 'contact', 'email', 'media', 
+                'prestation', 'budget', 'statut', 'agent', 'dateCreation', 'commentaire'
+            ]);
+            downloadCSV(csvContent, 'clients_psi_africa.csv');
+            logActivity('Export Données', 'Export des clients réalisé');
+            showToast('Export des clients terminé', 'success');
+        }
+
+        // === MODULE FACTURATION ===
+        function loadInvoicingPanel() {
+            if (!hasPermission('invoicing')) {
+                enforceAccessControl('invoicing');
+                return;
+            }
+            updateInvoiceStats();
+            renderInvoicesTable();
+            updateInvoiceClientSelect();
+        }
+
+        function updateInvoiceStats() {
+            const total = database.invoices.length;
+            const paid = database.invoices.filter(inv => inv.status === 'paid').length;
+            const pending = database.invoices.filter(inv => inv.status === 'pending').length;
+            const overdue = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            ).length;
+
+            const totalElement = document.getElementById('totalInvoices');
+            const paidElement = document.getElementById('paidInvoices');
+            const pendingElement = document.getElementById('pendingInvoices');
+            const overdueElement = document.getElementById('overdueInvoices');
+
+            if (totalElement) totalElement.textContent = total;
+            if (paidElement) paidElement.textContent = paid;
+            if (pendingElement) pendingElement.textContent = pending;
+            if (overdueElement) overdueElement.textContent = overdue;
+        }
+
+        function showCreateInvoiceModal() {
+            updateInvoiceClientSelect();
+            document.getElementById('invoiceModal').classList.remove('hidden');
+        }
+
+        function closeInvoiceModal() {
+            document.getElementById('invoiceModal').classList.add('hidden');
+            document.getElementById('invoiceForm').reset();
+        }
+
+        function updateInvoiceClientSelect() {
+            const select = document.getElementById('invoiceClient');
+            if (!select) return;
+
+            // Keep current selection if any
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">Sélectionner un client</option>' +
+                database.clients.map(client => 
+                    `<option value="${client.uid}">${client.nom} ${client.prenoms || ''}</option>`
+                ).join('');
+                
+            // Restore selection
+            if (currentValue) {
+                select.value = currentValue;
+            }
+        }
+
+        function createInvoice() {
+            if (!canModifyData()) {
+                showToast('Vous n\'avez pas les permissions pour créer des factures', 'error');
+                return;
+            }
+
+            const clientId = document.getElementById('invoiceClient').value;
+            const service = document.getElementById('invoiceService').value;
+            const amount = parseFloat(document.getElementById('invoiceAmount').value);
+            const dueDate = document.getElementById('invoiceDueDate').value;
+            const notes = document.getElementById('invoiceNotes').value.trim();
+
+            if (!clientId || !service || !amount || !dueDate) {
+                showToast('Veuillez remplir tous les champs obligatoires', 'error');
+                return;
+            }
+
+            const client = database.clients.find(c => c.uid === clientId);
+            if (!client) {
+                showToast('Client non trouvé', 'error');
+                return;
+            }
+
+            const invoice = {
+                id: generateUID(),
+                number: `PSI-${new Date().getFullYear()}-${String(database.invoices.length + 1).padStart(4, '0')}`,
+                clientId,
+                clientName: `${client.nom} ${client.prenoms || ''}`,
+                service,
+                amount,
+                paidAmount: 0,
+                status: 'pending',
+                issueDate: new Date().toISOString().split('T')[0],
+                dueDate,
+                agent: currentUser.fullName,
+                notes
+            };
+            
+            database.invoices.unshift(invoice);
+            client.statut = 'Facturé';
+            saveData();
+            
+            logActivity('Nouvelle Facture', `Facture ${invoice.number} créée pour ${client.nom}`);
+            showToast(`Facture ${invoice.number} créée avec succès`, 'success');
+            
+            closeInvoiceModal();
+            renderInvoicesTable();
+            updateInvoiceStats();
+            updateNotificationBadges();
+        }
+
+        function renderInvoicesTable() {
+            const tbody = document.getElementById('invoicesTableBody');
+            if (!tbody) return;
+
+            if (database.invoices.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary">Aucune facture enregistrée</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = database.invoices.map(invoice => {
+                const remaining = invoice.amount - (invoice.paidAmount || 0);
+                const isOverdue = invoice.status !== 'paid' && new Date(invoice.dueDate) < new Date();
+                const canSendReminder = ['pending', 'partial'].includes(invoice.status) || isOverdue;
+                
+                return `
+                    <tr>
+                        <td class="font-mono font-semibold">${invoice.number}</td>
+                        <td>${invoice.clientName}</td>
+                        <td>${invoice.service}</td>
+                        <td>${formatCurrency(invoice.amount)}</td>
+                        <td class="text-success">${formatCurrency(invoice.paidAmount || 0)}</td>
+                        <td class="${remaining > 0 ? 'text-warning' : 'text-success'}">${formatCurrency(remaining)}</td>
+                        <td>
+                            <span class="badge ${getInvoiceStatusBadgeClass(invoice.status, isOverdue)}">
+                                ${getInvoiceStatusLabel(invoice.status, isOverdue)}
+                            </span>
+                        </td>
+                        <td class="${isOverdue ? 'text-danger font-semibold' : ''}">${formatDate(invoice.dueDate)}</td>
+                        <td>
+                            <div class="flex gap-1">
+                                <button class="btn btn-sm" onclick="viewInvoice('${invoice.id}')" title="Voir détails">👁️</button>
+                                ${canModifyData() ? `<button class="btn btn-sm btn-success" onclick="recordPayment('${invoice.id}')" title="Enregistrer paiement">💳</button>` : ''}
+                                ${canSendReminder ? `<button class="btn btn-sm btn-warning" onclick="openReminderModal('${invoice.id}')" title="Rappel de paiement">📧</button>` : ''}
+                                ${canDeleteData() ? `<button class="btn btn-sm btn-danger" onclick="deleteInvoice('${invoice.id}')" title="Supprimer">🗑️</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getInvoiceStatusBadgeClass(status, isOverdue) {
+            if (isOverdue) return 'badge-overdue';
+            const classes = {
+                'pending': 'badge-pending',
+                'partial': 'badge-partial',
+                'paid': 'badge-paid'
+            };
+            return classes[status] || 'badge-pending';
+        }
+
+        function getInvoiceStatusLabel(status, isOverdue) {
+            if (isOverdue) return 'EN RETARD';
+            const labels = {
+                'pending': 'EN ATTENTE',
+                'partial': 'PARTIEL',
+                'paid': 'PAYÉ'
+            };
+            return labels[status] || 'EN ATTENTE';
+        }
+
+        function viewInvoice(id) {
+            const invoice = database.invoices.find(inv => inv.id === id);
+            if (invoice) {
+                const remaining = invoice.amount - (invoice.paidAmount || 0);
+                const reminders = database.reminderLogs.filter(log => log.invoiceId === id);
+                
+                let reminderHistory = '';
+                if (reminders.length > 0) {
+                    reminderHistory = `\n\nHISTORIQUE DES RAPPELS (${reminders.length}):\n` + 
+                        reminders.slice(0, 5).map(reminder => 
+                            `• ${formatDate(reminder.createdAt)} - ${reminder.channel.toUpperCase()} (${reminder.tone}/${reminder.scenario})`
+                        ).join('\n') +
+                        (reminders.length > 5 ? `\n... et ${reminders.length - 5} autres` : '');
+                }
+                
+                const info = `FACTURE: ${invoice.number}\nClient: ${invoice.clientName}\nService: ${invoice.service}\nMontant: ${formatCurrency(invoice.amount)}\nPayé: ${formatCurrency(invoice.paidAmount || 0)}\nRestant: ${formatCurrency(remaining)}\nStatut: ${invoice.status}\nÉmission: ${formatDate(invoice.issueDate)}\nÉchéance: ${formatDate(invoice.dueDate)}\nAgent: ${invoice.agent}${invoice.notes ? '\nNotes: ' + invoice.notes : ''}${reminderHistory}`;
+                alert(info);
+            }
+        }
+
+        function recordPayment(id) {
+            if (!canModifyData()) {
+                showToast('Vous n\'avez pas les permissions pour enregistrer des paiements', 'error');
+                return;
+            }
+
+            const invoice = database.invoices.find(inv => inv.id === id);
+            if (invoice) {
+                const remaining = invoice.amount - (invoice.paidAmount || 0);
+                const payment = prompt(`Montant du paiement (Restant: ${formatCurrency(remaining)}):`, remaining);
+                
+                if (payment && !isNaN(payment) && payment > 0) {
+                    const paymentAmount = parseFloat(payment);
+                    invoice.paidAmount = (invoice.paidAmount || 0) + paymentAmount;
+                    
+                    if (invoice.paidAmount >= invoice.amount) {
+                        invoice.status = 'paid';
+                        invoice.paidAmount = invoice.amount; // Ensure no overpayment
+                    } else {
+                        invoice.status = 'partial';
+                    }
+                    
+                    saveData();
+                    logActivity('Paiement Enregistré', `Paiement de ${formatCurrency(paymentAmount)} pour facture ${invoice.number}`);
+                    showToast(`Paiement de ${formatCurrency(paymentAmount)} enregistré`, 'success');
+                    
+                    renderInvoicesTable();
+                    updateInvoiceStats();
+                    updateNotificationBadges();
+                }
+            }
+        }
+
+        function sendReminder(id) {
+            // Redirect to new reminder modal system
+            openReminderModal(id);
+        }
+
+        function deleteInvoice(id) {
+            if (!canDeleteData()) {
+                showToast('Vous n\'avez pas les permissions pour supprimer des factures', 'error');
+                return;
+            }
+
+            const invoice = database.invoices.find(inv => inv.id === id);
+            if (invoice && confirm(`Êtes-vous sûr de vouloir supprimer la facture ${invoice.number} ?`)) {
+                database.invoices = database.invoices.filter(inv => inv.id !== id);
+                saveData();
+                logActivity('Suppression Facture', `Facture ${invoice.number} supprimée`);
+                showToast(`Facture ${invoice.number} supprimée`, 'warning');
+                renderInvoicesTable();
+                updateInvoiceStats();
+            }
+        }
+
+        function exportInvoices() {
+            if (!canExportData()) {
+                showToast('Vous n\'avez pas les permissions pour exporter des données', 'error');
+                return;
+            }
+
+            const csvContent = convertToCSV(database.invoices, [
+                'number', 'clientName', 'service', 'amount', 'paidAmount', 
+                'status', 'issueDate', 'dueDate', 'agent', 'notes'
+            ]);
+            downloadCSV(csvContent, 'factures_psi_africa.csv');
+            logActivity('Export Données', 'Export des factures réalisé');
+            showToast('Export des factures terminé', 'success');
+        }
+
+        // === MODULE RECOUVREMENT ===
+        function loadRecoveryPanel() {
+            if (!hasPermission('recovery')) {
+                enforceAccessControl('recovery');
+                return;
+            }
+            updateRecoveryStats();
+            renderRecoveryActions();
+        }
+
+        function updateRecoveryStats() {
+            const overdueInvoices = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            );
+            
+            const overdueAmount = overdueInvoices.reduce((sum, inv) => 
+                sum + (inv.amount - (inv.paidAmount || 0)), 0
+            );
+            
+            const totalInvoiced = database.invoices.reduce((sum, inv) => sum + inv.amount, 0);
+            const totalPaid = database.invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+            const recoveryRate = totalInvoiced > 0 ? ((totalPaid / totalInvoiced) * 100).toFixed(1) : 0;
+            
+            // Calculate this month's recovery
+            const thisMonth = new Date().getMonth();
+            const thisYear = new Date().getFullYear();
+            const thisMonthPayments = database.invoices.filter(inv => {
+                const issueDate = new Date(inv.issueDate);
+                return issueDate.getMonth() === thisMonth && issueDate.getFullYear() === thisYear && inv.paidAmount > 0;
+            }).reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+
+            const overdueAmountEl = document.getElementById('overdueAmount');
+            const overdueCountEl = document.getElementById('overdueCount');
+            const recoveryRateEl = document.getElementById('recoveryRate');
+            const recoveredThisMonthEl = document.getElementById('recoveredThisMonth');
+
+            if (overdueAmountEl) overdueAmountEl.textContent = formatCurrency(overdueAmount);
+            if (overdueCountEl) overdueCountEl.textContent = overdueInvoices.length;
+            if (recoveryRateEl) recoveryRateEl.textContent = recoveryRate + '%';
+            if (recoveredThisMonthEl) recoveredThisMonthEl.textContent = formatCurrency(thisMonthPayments);
+        }
+
+        function renderRecoveryActions() {
+            const container = document.getElementById('recoveryActions');
+            if (!container) return;
+
+            const overdueInvoices = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            );
+
+            if (overdueInvoices.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center text-success py-8">
+                        <div class="text-6xl mb-4">🎉</div>
+                        <h4 class="text-xl font-semibold mb-2">Excellent travail !</h4>
+                        <p class="text-secondary">Aucune facture en retard à traiter.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Facture</th>
+                                <th>Client</th>
+                                <th>Montant Dû</th>
+                                <th>Jours de Retard</th>
+                                <th>Priorité</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${overdueInvoices.map(invoice => {
+                                const remaining = invoice.amount - (invoice.paidAmount || 0);
+                                const daysOverdue = Math.floor((new Date() - new Date(invoice.dueDate)) / (1000 * 60 * 60 * 24));
+                                const priority = daysOverdue > 30 ? 'HAUTE' : daysOverdue > 15 ? 'MOYENNE' : 'FAIBLE';
+                                const priorityClass = daysOverdue > 30 ? 'text-danger' : daysOverdue > 15 ? 'text-warning' : 'text-info';
+                                
+                                return `
+                                    <tr>
+                                        <td class="font-mono font-semibold">${invoice.number}</td>
+                                        <td>${invoice.clientName}</td>
+                                        <td class="text-danger font-semibold">${formatCurrency(remaining)}</td>
+                                        <td class="text-danger">${daysOverdue} jours</td>
+                                        <td class="${priorityClass} font-semibold">${priority}</td>
+                                        <td>
+                                            <div class="flex gap-1">
+                                                <button class="btn btn-sm btn-warning" onclick="callClient('${invoice.id}')" title="Appeler client">📞</button>
+                                                <button class="btn btn-sm btn-info" onclick="sendReminder('${invoice.id}')" title="Envoyer rappel">📧</button>
+                                                ${canModifyData() ? `<button class="btn btn-sm btn-success" onclick="recordPayment('${invoice.id}')" title="Paiement reçu">💰</button>` : ''}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function callClient(invoiceId) {
+            const invoice = database.invoices.find(inv => inv.id === invoiceId);
+            if (invoice) {
+                const client = database.clients.find(c => c.uid === invoice.clientId);
+                if (client) {
+                    const notes = prompt(`Notes de l'appel avec ${invoice.clientName}:`);
+                    if (notes !== null) {
+                        logActivity('Appel Client', `Appel à ${invoice.clientName} pour facture ${invoice.number}${notes ? ' - ' + notes : ''}`);
+                        showToast(`Appel enregistré pour ${invoice.clientName}`, 'success');
+                    }
+                }
+            }
+        }
+
+        function generateRecoveryReport() {
+            if (!canExportData()) {
+                showToast('Vous n\'avez pas les permissions pour générer des rapports', 'error');
+                return;
+            }
+
+            const overdueInvoices = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            );
+            
+            const report = `=== RAPPORT DE RECOUVREMENT PSI AFRICA ===\nDate: ${new Date().toLocaleDateString('fr-FR')}\n\nRÉSUMÉ:\n- Factures en retard: ${overdueInvoices.length}\n- Montant total en retard: ${formatCurrency(overdueInvoices.reduce((sum, inv) => sum + (inv.amount - (inv.paidAmount || 0)), 0))}\n\nDÉTAIL DES FACTURES EN RETARD:\n${overdueInvoices.map(inv => `${inv.number} - ${inv.clientName} - ${formatCurrency(inv.amount - (inv.paidAmount || 0))}`).join('\n')}`;
+            
+            alert(report);
+            logActivity('Rapport Généré', 'Rapport de recouvrement généré');
+        }
+
+        // === MODULE PERFORMANCE ===
+        function loadPerformancePanel() {
+            if (!hasPermission('performance')) {
+                enforceAccessControl('performance');
+                return;
+            }
+            updatePerformanceMetrics();
+            initializePerformanceCharts();
+        }
+
+        function updatePerformanceMetrics() {
+            const totalRevenue = database.invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+            const totalClients = database.clients.length;
+            const conversions = database.clients.filter(c => c.statut === 'Converti').length;
+            const conversionRate = totalClients > 0 ? ((conversions / totalClients) * 100).toFixed(1) : 0;
+            const avgDealSize = conversions > 0 ? Math.round(totalRevenue / conversions) : 0;
+            
+            // Calculate average sales cycle (simplified)
+            const avgSalesCycle = 15; // days (simplified calculation)
+
+            const totalRevenueEl = document.getElementById('totalRevenue');
+            const conversionRateEl = document.getElementById('conversionRate');
+            const avgDealSizeEl = document.getElementById('avgDealSize');
+            const salesCycleEl = document.getElementById('salesCycle');
+
+            if (totalRevenueEl) totalRevenueEl.textContent = formatCurrency(totalRevenue);
+            if (conversionRateEl) conversionRateEl.textContent = conversionRate + '%';
+            if (avgDealSizeEl) avgDealSizeEl.textContent = formatCurrency(avgDealSize);
+            if (salesCycleEl) salesCycleEl.textContent = avgSalesCycle + ' j';
+        }
+
+        function initializePerformanceCharts() {
+            if (!hasPermission('performance')) return;
+
+            // Agent Performance Chart
+            const agentCtx = document.getElementById('agentPerformanceChart');
+            if (agentCtx && !charts.agentPerformanceChart) {
+                const agentPerformance = {};
+                database.clients.forEach(client => {
+                    const agent = client.agent;
+                    if (!agentPerformance[agent]) {
+                        agentPerformance[agent] = { clients: 0, revenue: 0 };
+                    }
+                    agentPerformance[agent].clients++;
+                    
+                    // Add revenue from invoices
+                    const clientInvoices = database.invoices.filter(inv => inv.clientId === client.uid);
+                    clientInvoices.forEach(inv => {
+                        agentPerformance[agent].revenue += (inv.paidAmount || 0);
+                    });
+                });
+
+                charts.agentPerformanceChart = new Chart(agentCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(agentPerformance),
+                        datasets: [{
+                            label: 'Chiffre d\'Affaires',
+                            data: Object.values(agentPerformance).map(perf => perf.revenue),
+                            backgroundColor: '#2563eb',
+                            borderColor: '#1d4ed8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            },
+                            x: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Monthly Performance Chart
+            const monthlyCtx = document.getElementById('monthlyPerformanceChart');
+            if (monthlyCtx && !charts.monthlyPerformanceChart) {
+                const monthlyData = [1200000, 1800000, 1500000, 2200000, 1900000, 2500000];
+                const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'];
+
+                charts.monthlyPerformanceChart = new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: months,
+                        datasets: [{
+                            label: 'Performance Mensuelle',
+                            data: monthlyData,
+                            borderColor: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            },
+                            x: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // === MODULE ANALYTICS ===
+        function loadAnalyticsPanel() {
+            if (!hasPermission('analytics')) {
+                enforceAccessControl('analytics');
+                return;
+            }
+            updateAnalyticsMetrics();
+            initializeAnalyticsCharts();
+        }
+
+        function updateAnalyticsMetrics() {
+            const totalCustomers = database.clients.length;
+            const activeCustomers = database.clients.filter(c => 
+                ['Opportunité', 'Négociation', 'Converti'].includes(c.statut)
+            ).length;
+            
+            const totalRevenue = database.invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0);
+            const customerLifetimeValue = totalCustomers > 0 ? Math.round(totalRevenue / totalCustomers) : 0;
+            
+            const lostCustomers = database.clients.filter(c => c.statut === 'Perdu').length;
+            const churnRate = totalCustomers > 0 ? ((lostCustomers / totalCustomers) * 100).toFixed(1) : 0;
+
+            const totalCustomersEl = document.getElementById('totalCustomers');
+            const activeCustomersEl = document.getElementById('activeCustomers');
+            const customerLifetimeValueEl = document.getElementById('customerLifetimeValue');
+            const churnRateEl = document.getElementById('churnRate');
+
+            if (totalCustomersEl) totalCustomersEl.textContent = totalCustomers;
+            if (activeCustomersEl) activeCustomersEl.textContent = activeCustomers;
+            if (customerLifetimeValueEl) customerLifetimeValueEl.textContent = formatCurrency(customerLifetimeValue);
+            if (churnRateEl) churnRateEl.textContent = churnRate + '%';
+        }
+
+        function initializeAnalyticsCharts() {
+            if (!hasPermission('analytics')) return;
+
+            // Trends Chart
+            const trendsCtx = document.getElementById('trendsChart');
+            if (trendsCtx && !charts.trendsChart) {
+                charts.trendsChart = new Chart(trendsCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin'],
+                        datasets: [
+                            {
+                                label: 'Nouveaux Clients',
+                                data: [12, 19, 8, 15, 23, 18],
+                                borderColor: '#2563eb',
+                                backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                            },
+                            {
+                                label: 'Conversions',
+                                data: [8, 12, 6, 10, 16, 14],
+                                borderColor: '#16a34a',
+                                backgroundColor: 'rgba(22, 163, 74, 0.1)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            },
+                            x: {
+                                ticks: { color: '#64748b' },
+                                grid: { color: '#475569' }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Segmentation Chart
+            const segmentationCtx = document.getElementById('segmentationChart');
+            if (segmentationCtx && !charts.segmentationChart) {
+                const prestationCounts = {};
+                database.clients.forEach(client => {
+                    prestationCounts[client.prestation] = (prestationCounts[client.prestation] || 0) + 1;
+                });
+
+                charts.segmentationChart = new Chart(segmentationCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(prestationCounts),
+                        datasets: [{
+                            data: Object.values(prestationCounts),
+                            backgroundColor: [
+                                '#2563eb',
+                                '#16a34a',
+                                '#f59e0b',
+                                '#ef4444',
+                                '#8b5cf6',
+                                '#06b6d4'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                labels: { color: '#cbd5e1' }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function generateAnalyticsReport() {
+            if (!canExportData()) {
+                showToast('Vous n\'avez pas les permissions pour générer des rapports', 'error');
+                return;
+            }
+
+            const report = `=== RAPPORT ANALYTICS PSI AFRICA ===\nDate: ${new Date().toLocaleDateString('fr-FR')}\n\nMÉTRIQUES PRINCIPALES:\n- Clients total: ${database.clients.length}\n- Taux de conversion: ${((database.clients.filter(c => c.statut === 'Converti').length / database.clients.length) * 100).toFixed(1)}%\n- CA total: ${formatCurrency(database.invoices.reduce((sum, inv) => sum + (inv.paidAmount || 0), 0))}\n- Factures en attente: ${database.invoices.filter(inv => inv.status === 'pending').length}`;
+            
+            alert(report);
+            logActivity('Rapport Généré', 'Rapport analytics généré');
+        }
+
+        // === MODULE ADMINISTRATION RENFORCÉ ===
+        function loadAdminPanel() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Accès réservé aux administrateurs uniquement', 'error');
+                return;
+            }
+            updateSystemStats();
+            loadUserManagement();
+            updateDataCounts();
+        }
+
+        function updateSystemStats() {
+            const dataSize = (JSON.stringify(database).length / 1024 / 1024).toFixed(2) + ' MB';
+            const dataSizeEl = document.getElementById('dataSize');
+            if (dataSizeEl) dataSizeEl.textContent = dataSize;
+        }
+
+        function loadUserManagement() {
+            const container = document.getElementById('userManagementGrid');
+            if (!container) return;
+
+            container.innerHTML = Object.entries(database.users).map(([username, user]) => `
+                <div class="user-card ${user.isBlocked ? 'blocked' : ''}">
+                    <h5>${user.fullName}</h5>
+                    <p><strong>Username:</strong> ${username}</p>
+                    <p><strong>Rôle:</strong> ${user.role}</p>
+                    <p><strong>Statut:</strong> 
+                        <span class="${user.isBlocked ? 'text-danger' : 'text-success'}">
+                            ${user.isBlocked ? 'Bloqué' : 'Actif'}
+                        </span>
+                    </p>
+                    <p><strong>Permissions:</strong></p>
+                    <div class="permission-grid">
+                        ${(user.permissions || []).map(perm => `
+                            <div class="permission-item">
+                                <span class="badge badge-info">${perm}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="user-actions">
+                        <button class="btn btn-sm ${user.isBlocked ? 'btn-success' : 'btn-warning'}" 
+                                onclick="toggleUserBlock('${username}')">
+                            ${user.isBlocked ? 'Débloquer' : 'Bloquer'}
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="editUserPermissions('${username}')">
+                            Permissions
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="resetUserPassword('${username}')">
+                            Reset MDP
+                        </button>
+                        ${username !== 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteUser('${username}')">Supprimer</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateDataCounts() {
+            const totalClientsCountEl = document.getElementById('totalClientsCount');
+            const totalInvoicesCountEl = document.getElementById('totalInvoicesCount');
+
+            if (totalClientsCountEl) totalClientsCountEl.textContent = database.clients.length;
+            if (totalInvoicesCountEl) totalInvoicesCountEl.textContent = database.invoices.length;
+        }
+
+        // === GESTION UTILISATEURS ADMIN ===
+        function addNewUser() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+            document.getElementById('addUserModal').classList.remove('hidden');
+        }
+
+        function closeAddUserModal() {
+            document.getElementById('addUserModal').classList.add('hidden');
+            document.getElementById('addUserForm').reset();
+        }
+
+        function createNewUser() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const username = document.getElementById('newUsername').value.trim().toLowerCase();
+            const fullName = document.getElementById('newUserFullName').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+
+            if (!username || !fullName || !password) {
+                showToast('Tous les champs sont obligatoires', 'error');
+                return;
+            }
+
+            if (database.users[username]) {
+                showToast('Ce nom d\'utilisateur existe déjà', 'error');
+                return;
+            }
+
+            // Collect permissions
+            const permissions = [];
+            document.querySelectorAll('#newUserPermissions input[type="checkbox"]:checked').forEach(cb => {
+                permissions.push(cb.id.replace('perm-', ''));
+            });
+
+            const newUser = {
+                role,
+                password,
+                fullName,
+                permissions,
+                canModify: role === 'admin',
+                canDelete: role === 'admin',
+                canExport: role === 'admin' || role === 'manager',
+                isBlocked: false
+            };
+
+            database.users[username] = newUser;
+            saveData();
+
+            logActivity('Nouvel Utilisateur', `Utilisateur ${username} (${fullName}) créé par l'admin`);
+            showToast(`Utilisateur ${fullName} créé avec succès`, 'success');
+
+            closeAddUserModal();
+            loadUserManagement();
+        }
+
+        function toggleUserBlock(username) {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (username === 'admin') {
+                showToast('Impossible de bloquer le compte administrateur principal', 'error');
+                return;
+            }
+
+            const user = database.users[username];
+            if (user) {
+                user.isBlocked = !user.isBlocked;
+                saveData();
+
+                logActivity('Gestion Utilisateur', `Utilisateur ${username} ${user.isBlocked ? 'bloqué' : 'débloqué'} par l'admin`);
+                showToast(`Utilisateur ${username} ${user.isBlocked ? 'bloqué' : 'débloqué'}`, 'warning');
+                
+                loadUserManagement();
+            }
+        }
+
+        function editUserPermissions(username) {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const user = database.users[username];
+            if (!user) return;
+
+            const allPermissions = ['dashboard', 'clients', 'invoicing', 'recovery', 'performance', 'analytics', 'admin'];
+            const currentPermissions = user.permissions || [];
+
+            const newPermissions = prompt(
+                `Permissions actuelles: ${currentPermissions.join(', ')}\n\nPermissions disponibles: ${allPermissions.join(', ')}\n\nEntrez les nouvelles permissions (séparées par des virgules):`,
+                currentPermissions.join(', ')
+            );
+
+            if (newPermissions !== null) {
+                const permissionsArray = newPermissions.split(',').map(p => p.trim()).filter(p => allPermissions.includes(p));
+                user.permissions = permissionsArray;
+                saveData();
+
+                logActivity('Modification Permissions', `Permissions de ${username} modifiées: ${permissionsArray.join(', ')}`);
+                showToast(`Permissions de ${username} mises à jour`, 'success');
+                
+                loadUserManagement();
+            }
+        }
+
+        function resetUserPassword(username) {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const newPassword = prompt(`Nouveau mot de passe pour ${username}:`);
+            if (newPassword && newPassword.trim()) {
+                const user = database.users[username];
+                if (user) {
+                    user.password = newPassword.trim();
+                    saveData();
+
+                    logActivity('Reset Mot de Passe', `Mot de passe réinitialisé pour ${username}`);
+                    showToast(`Mot de passe de ${username} réinitialisé`, 'success');
+                }
+            }
+        }
+
+        function deleteUser(username) {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (username === 'admin') {
+                showToast('Impossible de supprimer le compte administrateur principal', 'error');
+                return;
+            }
+
+            if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur ${username} ?`)) {
+                delete database.users[username];
+                saveData();
+
+                logActivity('Suppression Utilisateur', `Utilisateur ${username} supprimé par l'admin`);
+                showToast(`Utilisateur ${username} supprimé`, 'warning');
+                
+                loadUserManagement();
+            }
+        }
+
+        function saveAllUsers() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            saveData();
+            showToast('Configuration utilisateurs sauvegardée', 'success');
+            logActivity('Sauvegarde', 'Configuration utilisateurs sauvegardée');
+        }
+
+        function resetAllPasswords() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (confirm('Êtes-vous sûr de vouloir réinitialiser TOUS les mots de passe aux valeurs par défaut ?')) {
+                Object.keys(database.users).forEach(username => {
+                    const defaultUser = CONFIG.DEMO_USERS[username];
+                    if (defaultUser) {
+                        database.users[username].password = defaultUser.password;
+                    }
+                });
+                saveData();
+
+                logActivity('Reset Global MDP', 'Tous les mots de passe réinitialisés');
+                showToast('Tous les mots de passe ont été réinitialisés', 'warning');
+            }
+        }
+
+        // === GESTION DONNÉES ADMIN ===
+        function purgeOldClients() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const sixMonthsAgo = new Date();
+            sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+            const oldClients = database.clients.filter(client => 
+                new Date(client.dateCreation) < sixMonthsAgo && 
+                ['Perdu'].includes(client.statut)
+            );
+
+            if (oldClients.length === 0) {
+                showToast('Aucun ancien client à purger', 'info');
+                return;
+            }
+
+            if (confirm(`Supprimer ${oldClients.length} anciens clients (statut "Perdu" et > 6 mois) ?`)) {
+                database.clients = database.clients.filter(client => !oldClients.includes(client));
+                saveData();
+
+                logActivity('Purge Données', `${oldClients.length} anciens clients supprimés`);
+                showToast(`${oldClients.length} anciens clients supprimés`, 'warning');
+                updateDataCounts();
+            }
+        }
+
+        function deleteAllClients() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (confirm('⚠️ ATTENTION: Supprimer TOUS les clients ? Cette action est irréversible !')) {
+                if (confirm('Confirmez-vous la suppression de TOUS les clients ?')) {
+                    const count = database.clients.length;
+                    database.clients = [];
+                    saveData();
+
+                    logActivity('Suppression Totale', `TOUS les clients (${count}) supprimés par l'admin`);
+                    showToast(`Tous les clients (${count}) ont été supprimés`, 'error');
+                    updateDataCounts();
+                    renderClientsTable();
+                }
+            }
+        }
+
+        function purgeOldInvoices() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const oneYearAgo = new Date();
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+            const oldInvoices = database.invoices.filter(invoice => 
+                new Date(invoice.issueDate) < oneYearAgo && 
+                invoice.status === 'paid'
+            );
+
+            if (oldInvoices.length === 0) {
+                showToast('Aucune ancienne facture à purger', 'info');
+                return;
+            }
+
+            if (confirm(`Supprimer ${oldInvoices.length} anciennes factures (payées et > 1 an) ?`)) {
+                database.invoices = database.invoices.filter(invoice => !oldInvoices.includes(invoice));
+                saveData();
+
+                logActivity('Purge Données', `${oldInvoices.length} anciennes factures supprimées`);
+                showToast(`${oldInvoices.length} anciennes factures supprimées`, 'warning');
+                updateDataCounts();
+            }
+        }
+
+        function deleteAllInvoices() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (confirm('⚠️ ATTENTION: Supprimer TOUTES les factures ? Cette action est irréversible !')) {
+                if (confirm('Confirmez-vous la suppression de TOUTES les factures ?')) {
+                    const count = database.invoices.length;
+                    database.invoices = [];
+                    saveData();
+
+                    logActivity('Suppression Totale', `TOUTES les factures (${count}) supprimées par l'admin`);
+                    showToast(`Toutes les factures (${count}) ont été supprimées`, 'error');
+                    updateDataCounts();
+                    renderInvoicesTable();
+                    updateInvoiceStats();
+                }
+            }
+        }
+
+        function backupData() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const backup = JSON.stringify(database, null, 2);
+            const blob = new Blob([backup], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `psi_crm_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Sauvegarde créée avec succès', 'success');
+            logActivity('Sauvegarde', 'Sauvegarde complète des données créée');
+        }
+
+        function restoreData() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        try {
+                            const restoredData = JSON.parse(event.target.result);
+                            if (confirm('Êtes-vous sûr de vouloir restaurer ces données ? Toutes les données actuelles seront remplacées.')) {
+                                database = restoredData;
+                                saveData();
+                                showToast('Données restaurées avec succès', 'success');
+                                logActivity('Restauration', 'Données restaurées depuis sauvegarde');
+                                location.reload();
+                            }
+                        } catch (error) {
+                            showToast('Erreur lors de la restauration: fichier invalide', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function optimizeDatabase() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            // Simulate database optimization
+            setTimeout(() => {
+                // Remove duplicate activities
+                const uniqueActivities = database.activities.filter((activity, index, self) => 
+                    index === self.findIndex(a => a.id === activity.id)
+                );
+                database.activities = uniqueActivities.slice(0, 50); // Keep only 50 most recent
+
+                saveData();
+                showToast('Base de données optimisée', 'success');
+                logActivity('Optimisation', 'Base de données optimisée');
+            }, 2000);
+            showToast('Optimisation en cours...', 'info');
+        }
+
+        function clearCache() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            // Clear charts cache
+            Object.keys(charts).forEach(chartKey => {
+                if (charts[chartKey]) {
+                    charts[chartKey].destroy();
+                }
+            });
+            charts = {};
+
+            showToast('Cache vidé', 'success');
+            logActivity('Maintenance', 'Cache système vidé');
+        }
+
+        function viewSystemLogs() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            const logs = database.activities.slice(0, 20).map(activity => 
+                `${new Date(activity.timestamp).toLocaleString()} - ${activity.user}: ${activity.action} - ${activity.details}`
+            ).join('\n');
+
+            alert('LOGS SYSTÈME (20 derniers):\n\n' + logs);
+        }
+
+        function clearLogs() {
+            if (currentUser?.role !== 'admin') {
+                showToast('Action réservée aux administrateurs', 'error');
+                return;
+            }
+
+            if (confirm('Êtes-vous sûr de vouloir effacer tous les logs ?')) {
+                const count = database.activities.length;
+                database.activities = [];
+                saveData();
+                showToast(`${count} logs effacés`, 'warning');
+                logActivity('Maintenance', 'Logs système effacés');
+            }
+        }
+
+        function exportAllData() {
+            if (!canExportData()) {
+                showToast('Vous n\'avez pas les permissions pour exporter des données', 'error');
+                return;
+            }
+
+            const allData = {
+                clients: database.clients,
+                invoices: database.invoices,
+                activities: database.activities,
+                users: currentUser.role === 'admin' ? database.users : 'Accès restreint',
+                exportDate: new Date().toISOString(),
+                exportedBy: currentUser.fullName
+            };
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `psi_crm_export_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Export complet terminé', 'success');
+            logActivity('Export Complet', 'Export de toutes les données autorisées');
+        }
+
+        // === FONCTIONS UTILITAIRES ===
+        function convertToCSV(data, headers) {
+            const csvHeaders = headers.join(',');
+            const csvRows = data.map(row => 
+                headers.map(header => {
+                    const value = row[header] || '';
+                    return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+                }).join(',')
+            );
+            return csvHeaders + '\n' + csvRows.join('\n');
+        }
+
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function showNotifications() {
+            const overdueCount = database.invoices.filter(inv => 
+                inv.status !== 'paid' && new Date(inv.dueDate) < new Date()
+            ).length;
+            
+            const recentActivities = database.activities.slice(0, 3);
+            
+            let message = `NOTIFICATIONS:\n\n`;
+            
+            if (overdueCount > 0) {
+                message += `⚠️ ${overdueCount} facture(s) en retard nécessitent votre attention\n\n`;
+            }
+            
+            if (recentActivities.length > 0) {
+                message += `ACTIVITÉS RÉCENTES:\n${recentActivities.map(activity => 
+                    `• ${activity.action}: ${activity.details}`
+                ).join('\n')}`;
+            }
+            
+            if (overdueCount === 0 && recentActivities.length === 0) {
+                message += `✅ Aucune nouvelle notification`;
+            }
+            
+            alert(message);
+        }
+
+        // === INITIALISATION ===
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                debugLog('Initializing PSI CRM v' + CONFIG.VERSION);
+                loadData();
+                
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', handleLogin);
+                }
+                
+                initializeNavigation();
+                
+                // Auto-save every 5 minutes
+                setInterval(() => {
+                    if (currentUser) {
+                        saveData();
+                        debugLog('Auto-save completed');
+                    }
+                }, 5 * 60 * 1000);
+                
+                // Update performance period listener
+                const performancePeriod = document.getElementById('performancePeriod');
+                if (performancePeriod) {
+                    performancePeriod.addEventListener('change', () => {
+                        updatePerformanceMetrics();
+                        // Re-initialize charts with new period data
+                        Object.keys(charts).forEach(chartKey => {
+                            if (chartKey.includes('Performance')) {
+                                charts[chartKey].destroy();
+                                delete charts[chartKey];
+                            }
+                        });
+                        initializePerformanceCharts();
+                    });
+                }
+                
+                debugLog('PSI CRM initialized successfully');
+                
+            } catch (e) {
+                debugError('Error during initialization', e);
+                showToast('Erreur d\'initialisation du système', 'error');
+            }
+        });
+
+        // Save before leaving
+        window.addEventListener('beforeunload', () => {
+            if (currentUser) {
+                saveData();
+                debugLog('Data saved before unload');
+            }
+        });
+
+        // Handle window resize for charts
+        window.addEventListener('resize', () => {
+            Object.values(charts).forEach(chart => {
+                if (chart && chart.resize) {
+                    chart.resize();
+                }
+            });
+        });
+
+        // Prevent form submission on Enter key in search fields
+        document.addEventListener('keypress', (e) => {
+            if (e.target.classList.contains('search-input') && e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+
+        // Global error handler
+        window.addEventListener('error', (e) => {
+            debugError('Global error caught', e.error);
+        });
+
+        // Add keyboard shortcuts (Admin only)
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'n':
+                        e.preventDefault();
+                        if (document.getElementById('clients-panel').classList.contains('hidden') === false) {
+                            showAddClientModal();
+                        }
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        if (canModifyData()) {
+                            saveData();
+                            showToast('Données sauvegardées', 'success');
+                        }
+                        break;
+                    case 'u':
+                        if (currentUser?.role === 'admin') {
+                            e.preventDefault();
+                            addNewUser();
+                        }
+                        break;
+                }
+            }
+
+            // Admin emergency access
+            if (e.ctrlKey && e.shiftKey && e.key === 'A' && currentUser?.role === 'admin') {
+                e.preventDefault();
+                switchToPanel('admin');
+            }
+        });
+
+        // Security: Block inspect element for non-admin users
+        document.addEventListener('contextmenu', (e) => {
+            if (currentUser?.role !== 'admin') {
+                e.preventDefault();
+                showToast('Action non autorisée', 'warning');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (currentUser?.role !== 'admin') {
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                    e.preventDefault();
+                    showToast('Outils de développement bloqués', 'warning');
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>

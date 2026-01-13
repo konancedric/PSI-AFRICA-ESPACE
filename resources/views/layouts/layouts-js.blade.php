@@ -1,7 +1,10 @@
 <script src="{{ asset('src/js/vendor/jquery-3.3.1.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@17.0.0/build/js/intlTelInput.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/intl-tel-input@17.0.0/build/js/utils.js"></script>
 <script src="{{ asset('plugins/popper.js/dist/umd/popper.min.js') }}"></script>
 <script src="{{ asset('plugins/bootstrap/dist/js/bootstrap.min.js') }}"></script>
 <script src="{{ asset('plugins/perfect-scrollbar/dist/perfect-scrollbar.min.js') }}"></script>
 <script src="{{ asset('plugins/screenfull/dist/screenfull.js') }}"></script>
 <script src="{{ asset('all.js') }}"></script>
 <script src="{{ asset('plugins/select2/dist/js/select2.min.js') }}"></script>
+ <script src="{{ asset('plugins/tinymce/js/tinymce/tinymce.min.js') }}"></script>

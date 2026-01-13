@@ -24,7 +24,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Clôture mensuelle automatique le 1er de chaque mois à 00:01
+        $schedule->command('caisse:cloture-mensuelle')
+                 ->monthlyOn(1, '00:01')
+                 ->timezone('Africa/Abidjan')
+                 ->withoutOverlapping()
+                 ->onOneServer();
     }
 
     /**

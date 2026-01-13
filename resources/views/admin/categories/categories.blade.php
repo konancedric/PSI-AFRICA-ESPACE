@@ -7,10 +7,10 @@
             <div class="row align-items-end">
                 <div class="col-lg-8">
                     <div class="page-header-title">
-                        <i class="fas fa-user-cog bg-orange"></i>
+                        <i class="fas fa-tags bg-orange"></i>
                         <div class="d-inline">
-                            <h5>{{ __('Categories')}}</h5>
-                            <span>{{ __('Gestion des Categories')}}</span>
+                            <h5>{{ __('Categories Actualités')}}</h5>
+                            <span>{{ __('Gestion des Categories Actualités')}}</span>
                         </div>
                     </div>
                 </div>
@@ -21,7 +21,7 @@
                                 <a href="{{url('dashboard')}}"><i class="ik ik-home"></i></a>
                             </li>
                             <li class="breadcrumb-item">
-                                <a href="#">{{ __('Categories')}}</a>
+                                <a href="#">{{ __('Categories Actualités')}}</a>
                             </li>
                         </ol>
                     </nav>

@@ -30,6 +30,56 @@ class LoginController extends Controller
     protected $redirectTo = RouteServiceProvider::HOME;
 
     /**
+     * Get the post-login redirect path.
+     *
+     * @return string
+     */
+    protected function redirectTo()
+    {
+        // Vérifier s'il y a une redirection "intended" (depuis middleware auth)
+        if (session()->has('url.intended')) {
+            return session()->get('url.intended');
+        }
+
+        // Sinon, utiliser le comportement par défaut (dashboard)
+        return $this->redirectTo;
+    }
+
+    /**
+     * Get the login username to be used by the controller.
+     *
+     * @return string
+     */
+    public function username()
+    {
+        $login = request()->input('login');
+
+        // Détection automatique: si c'est un email, chercher par email, sinon par contact
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'contact';
+
+        request()->merge([$field => $login]);
+
+        return $field;
+    }
+
+    /**
+     * Get the needed authorization credentials from the request.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    protected function credentials(Request $request)
+    {
+        $login = $request->input('login');
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'contact';
+
+        return [
+            $field => $login,
+            'password' => $request->input('password'),
+        ];
+    }
+
+    /**
      * Create a new controller instance.
      *
      * @return void

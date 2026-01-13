@@ -1,0 +1,3694 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Système de gestion de caisse PSI - Version 3.0">
+    <title>Gestion de Caisse PSI v3.0</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --success: #38ef7d;
+            --danger: #f5576c;
+            --warning: #ffc107;
+            --info: #4facfe;
+            --bg-main: #f5f7fa;
+            --bg-card: #ffffff;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --border: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-main: #1a1a2e;
+            --bg-card: #16213e;
+            --text-primary: #eaeaea;
+            --text-secondary: #b0b0b0;
+            --border: #2d3748;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .toast-container { 
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            max-width: 350px;
+        }
+        
+        .toast { 
+            background: var(--bg-card);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideInRight 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast-close { 
+            margin-left: auto;
+            cursor: pointer;
+            opacity: 0.5;
+            font-size: 20px;
+            border: none;
+            background: none;
+            color: var(--text-primary);
+        }
+
+        .login-page { 
+            display: none;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-page.active { 
+            display: flex;
+        }
+        
+        .login-box { 
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            animation: slideIn 0.5s;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .login-box h1 { 
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .login-box p { 
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+        }
+
+        .app { 
+            display: none;
+        }
+        
+        .app.active { 
+            display: block;
+        }
+        
+        .container { 
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header-left h1 { 
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        
+        .header-left p { 
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        
+        .header-right { 
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tabs { 
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn { 
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        
+        .tab-btn:hover:not(:disabled) { 
+            background: var(--bg-main);
+            border-color: var(--primary);
+        }
+        
+        .tab-btn.active { 
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .tab-btn:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .tab-content { 
+            display: none;
+        }
+        
+        .tab-content.active { 
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .card { 
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+        
+        .card h2 { 
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .kpi-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .kpi-card { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .kpi-card.success { 
+            background: linear-gradient(135deg, #11998e 0%, var(--success) 100%);
+        }
+        
+        .kpi-card.warning { 
+            background: linear-gradient(135deg, #f093fb 0%, var(--danger) 100%);
+        }
+        
+        .kpi-card.info { 
+            background: linear-gradient(135deg, var(--info) 0%, #00f2fe 100%);
+        }
+        
+        .kpi-card.dime { 
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .kpi-card.cabinet { 
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .kpi-label { 
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .kpi-value { 
+            font-size: 1.6em;
+            font-weight: bold;
+        }
+        
+        .kpi-sub { 
+            font-size: 0.75em;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .form-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group { 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label { 
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+        }
+        
+        input, select, textarea { 
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus { 
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-error {
+            border-color: var(--danger) !important;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .btn { 
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { 
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) { 
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-success { 
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-danger { 
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-secondary { 
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-warning { 
+            background: var(--warning);
+            color: #333;
+        }
+        
+        .btn-group { 
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .btn-logout { 
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        table { 
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td { 
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        th { 
+            background: var(--bg-main);
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        tr:hover { 
+            background: var(--bg-main);
+        }
+
+        .pagination { 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .pagination button { 
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            border-radius: 5px;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+        
+        .pagination button:hover:not(:disabled) { 
+            background: var(--primary);
+            color: white;
+        }
+        
+        .pagination button:disabled { 
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .pagination span { 
+            font-weight: 600;
+        }
+
+        .modal { 
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active { 
+            display: flex;
+        }
+        
+        .modal-content { 
+            background: var(--bg-card);
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s;
+        }
+        
+        .modal-header { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 { 
+            color: var(--primary);
+        }
+        
+        .close-modal { 
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .filters { 
+            background: var(--bg-main);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .filters-grid { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .chart-canvas { 
+            width: 100%;
+            height: 300px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .badge { 
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-doc { 
+            background: var(--primary);
+            color: white;
+        }
+        
+        .badge-cabinet { 
+            background: var(--success);
+            color: white;
+        }
+        
+        .badge-autre { 
+            background: #6c757d;
+            color: white;
+        }
+        
+        .badge-admin { 
+            background: var(--danger);
+            color: white;
+        }
+        
+        .badge-agent { 
+            background: var(--info);
+            color: white;
+        }
+        
+        .badge-active { 
+            background: var(--success);
+            color: white;
+        }
+        
+        .badge-blocked { 
+            background: var(--danger);
+            color: white;
+        }
+        
+        .badge-info {
+            background: var(--info);
+            color: white;
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid, .kpi-grid { 
+                grid-template-columns: 1fr;
+            }
+            
+            table { 
+                font-size: 12px;
+            }
+            
+            th, td { 
+                padding: 8px;
+            }
+
+            .header-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        @media print {
+            body { 
+                background: white;
+            }
+            
+            .tabs, .btn, .filters, .no-print, 
+            header .header-right, .action-btns, .pagination { 
+                display: none !important;
+            }
+            
+            .card { 
+                box-shadow: none;
+                page-break-inside: avoid;
+                border: 1px solid #ddd;
+            }
+            
+            .app { 
+                display: block !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <div class="login-page active" id="loginPage">
+        <div class="login-box">
+            <h1>🔐 Connexion</h1>
+            <p>Gestion de Caisse PSI v3.0</p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Nom d'utilisateur</label>
+                    <input 
+                        type="text" 
+                        id="loginUsername" 
+                        required 
+                        autocomplete="username"
+                        placeholder="Entrez votre nom d'utilisateur">
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="loginPassword">Mot de passe</label>
+                    <input 
+                        type="password" 
+                        id="loginPassword" 
+                        required 
+                        autocomplete="current-password"
+                        placeholder="Entrez votre mot de passe">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px; justify-content: center;">
+                    Se connecter
+                </button>
+            </form>
+            <p style="margin-top: 20px; font-size: 0.85em; text-align: center;">
+                <strong>Demo:</strong> admin / PSI@2025A ou agent1 / PSI@AGENT1
+            </p>
+        </div>
+    </div>
+
+    <div class="app" id="mainApp">
+        <div class="container">
+            <header>
+                <div class="header-left">
+                    <h1>💰 Gestion de Caisse</h1>
+                    <p>Système PSI v3.0 - Amélioré</p>
+                </div>
+                <div class="header-right">
+                    <button class="theme-toggle" onclick="toggleTheme()">🌙 Thème</button>
+                    <div class="user-info">
+                        <div class="username" id="currentUsername">-</div>
+                        <div class="role" id="currentUserRole">-</div>
+                    </div>
+                    <button class="btn btn-logout" onclick="logout()">🚪 Déconnexion</button>
+                </div>
+            </header>
+
+            <div class="tabs" role="tablist">
+                <button class="tab-btn active" id="tabDashboard" onclick="switchTab('dashboard')">
+                    📊 Dashboard
+                </button>
+                <button class="tab-btn" id="tabEntrees" onclick="switchTab('entrees')">
+                    ➕ Entrées
+                </button>
+                <button class="tab-btn" id="tabSorties" onclick="switchTab('sorties')">
+                    ➖ Sorties
+                </button>
+                <button class="tab-btn" id="tabDepenses" onclick="switchTab('depenses')" style="display: none;">
+                    💳 Dépenses
+                </button>
+                <button class="tab-btn" id="tabSettings" onclick="switchTab('settings')">
+                    ⚙️ Paramètres
+                </button>
+            </div>
+
+            <div id="dashboard" class="tab-content active">
+                <div class="card no-print">
+                    <h2>Filtres et Recherche</h2>
+                    <div class="filters">
+                        <div class="filters-grid">
+                            <div class="form-group">
+                                <label for="filterDateDebut">Du</label>
+                                <input type="date" id="filterDateDebut">
+                            </div>
+                            <div class="form-group">
+                                <label for="filterDateFin">Au</label>
+                                <input type="date" id="filterDateFin">
+                            </div>
+                            <div class="form-group">
+                                <label for="filterNature">Nature</label>
+                                <select id="filterNature">
+                                    <option value="">Toutes</option>
+                                    <option value="Frais de Cabinet">Frais de Cabinet</option>
+                                    <option value="Documents de Voyage">Documents de Voyage</option>
+                                    <option value="Autres Documents">Autres Documents</option>
+                                    <option value="Autre Entrée">Autre Entrée</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filterMode">Mode de paiement</label>
+                                <select id="filterMode">
+                                    <option value="">Tous</option>
+                                    <option value="Espèces">Espèces</option>
+                                    <option value="Mobile Money">Mobile Money</option>
+                                    <option value="Virement">Virement</option>
+                                    <option value="Chèque">Chèque</option>
+                                    <option value="Carte">Carte</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="filterSearch">Recherche</label>
+                                <input 
+                                    type="text" 
+                                    id="filterSearch" 
+                                    placeholder="Nom, prénom, réf...">
+                            </div>
+                        </div>
+                        <div class="btn-group" style="margin-top: 15px;">
+                            <button class="btn btn-primary" onclick="applyFilters()">
+                                Appliquer
+                            </button>
+                            <button class="btn btn-secondary" onclick="resetFilters()">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-grid" id="kpiGrid"></div>
+
+                <div class="card">
+                    <h2>Graphique : Encaissements / Décaissements / Solde</h2>
+                    <canvas id="chartCashFlow" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Répartition par Nature</h2>
+                    <canvas id="chartNature" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Évolution Marge & Dîme</h2>
+                    <canvas id="chartMargeDime" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="card">
+                    <h2>Détails des Documents</h2>
+                    <div id="documentsDetails"></div>
+                </div>
+
+                <div class="card no-print">
+                    <h2>Actions</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-success" onclick="exportCSV('entrees')">
+                            📥 Exporter Entrées
+                        </button>
+                        <button class="btn btn-success" onclick="exportCSV('sorties')">
+                            📥 Exporter Sorties
+                        </button>
+                        <button class="btn btn-primary" onclick="window.print()">
+                            🖨️ Imprimer
+                        </button>
+                        <button class="btn btn-warning" onclick="backupData()">
+                            💾 Sauvegarder
+                        </button>
+                        <button class="btn btn-secondary" onclick="restoreData()">
+                            📂 Restaurer
+                        </button>
+                        <button class="btn btn-danger" onclick="resetDemo()" id="btnResetDemo">
+                            🔄 Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="entrees" class="tab-content">
+                <div class="card">
+                    <h2>Ajouter/Modifier une Entrée</h2>
+                    <form id="formEntree">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="entreeDate">Date *</label>
+                                <input type="date" id="entreeDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreeRef">Référence</label>
+                                <div style="display: flex; gap: 5px;">
+                                    <input type="text" id="entreeRef" style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" onclick="generateRef('entree')">
+                                        Générer
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreeNom">Nom *</label>
+                                <input type="text" id="entreeNom" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreePrenoms">Prénoms *</label>
+                                <input type="text" id="entreePrenoms" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreeNature">Nature *</label>
+                                <select id="entreeNature" required onchange="checkDocumentNature()">
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Frais de Cabinet">Frais de Cabinet</option>
+                                    <option value="Documents de Voyage">Documents de Voyage</option>
+                                    <option value="Autres Documents">Autres Documents</option>
+                                    <option value="Autre Entrée">Autre Entrée</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreeMontant">Montant (FCFA) *</label>
+                                <input type="number" id="entreeMontant" min="1" step="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="entreeMode">Mode de paiement *</label>
+                                <select id="entreeMode" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Espèces">Espèces</option>
+                                    <option value="Mobile Money">Mobile Money</option>
+                                    <option value="Virement">Virement</option>
+                                    <option value="Chèque">Chèque</option>
+                                    <option value="Carte">Carte</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" id="entreeId">
+                        <input type="hidden" id="entreeTiersNom">
+                        <input type="hidden" id="entreeMontantVerseTiers" value="0">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="btnSaveEntree">
+                                Ajouter
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelEntree()">
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Liste des Entrées</h2>
+                    <div id="entreesTable"></div>
+                    <div class="pagination" id="entreesPagination"></div>
+                </div>
+            </div>
+
+            <div id="sorties" class="tab-content">
+                <div class="card">
+                    <h2>Ajouter/Modifier une Sortie</h2>
+                    <form id="formSortie">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="sortieDate">Date *</label>
+                                <input type="date" id="sortieDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sortieRef">Référence</label>
+                                <div style="display: flex; gap: 5px;">
+                                    <input type="text" id="sortieRef" style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" onclick="generateRef('sortie')">
+                                        Générer
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="sortieNature">Nature *</label>
+                                <input type="text" id="sortieNature" required placeholder="Ex: Fournitures...">
+                            </div>
+                            <div class="form-group">
+                                <label for="sortieFournisseur">Fournisseur *</label>
+                                <input type="text" id="sortieFournisseur" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="sortieMontant">Montant (FCFA) *</label>
+                                <input type="number" id="sortieMontant" min="1" step="1" required>
+                            </div>
+                        </div>
+                        <input type="hidden" id="sortieId">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="btnSaveSortie">
+                                Ajouter
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelSortie()">
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Liste des Sorties</h2>
+                    <div id="sortiesTable"></div>
+                    <div class="pagination" id="sortiesPagination"></div>
+                </div>
+            </div>
+
+            <div id="depenses" class="tab-content">
+                <div class="card">
+                    <h2>📅 Historique des Clôtures Mensuelles</h2>
+                    <div id="histoireClotures"></div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h2 style="margin: 0;">📊 Trésorerie - <span id="depensesMoisActuel"></span></h2>
+                        <div>
+                            <span id="statutMois" class="badge badge-active" style="font-size: 14px; padding: 8px 16px;">OUVERT</span>
+                        </div>
+                    </div>
+                    <div style="background: var(--bg-main); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <div id="reportMoisPrecedent" style="padding: 15px; background: var(--bg-card); border-radius: 8px; border-left: 4px solid var(--info); margin-bottom: 20px; display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">📋 Report du mois précédent</div>
+                                    <div style="font-size: 1.3em; font-weight: bold; color: var(--info); margin-top: 5px;" id="montantReport">0 FCFA</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">Clôture de</div>
+                                    <div style="font-size: 1em; font-weight: bold;" id="periodeReport">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                            <div style="text-align: center; padding: 20px; background: var(--bg-card); border-radius: 8px; border: 2px solid #38ef7d;">
+                                <div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 5px;">💰 CAISSE (Date du jour)</div>
+                                <div style="font-size: 1.6em; font-weight: bold; color: #38ef7d;" id="tresorerieCaisse">0 FCFA</div>
+                                <div style="font-size: 0.75em; color: var(--text-secondary); margin-top: 5px;">Solde net du dashboard</div>
+                            </div>
+                            <div style="text-align: center; padding: 20px; background: var(--bg-card); border-radius: 8px; border: 2px solid #4facfe;">
+                                <div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 5px;">🏦 BANQUE</div>
+                                <div style="font-size: 1.6em; font-weight: bold; color: #4facfe;" id="tresorerieBanque">0 FCFA</div>
+                                <div style="font-size: 0.75em; color: var(--text-secondary); margin-top: 5px;">Montant en banque</div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 8px; margin-bottom: 20px; color: white;">
+                            <div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">TOTAL TRÉSORERIE</div>
+                                <div style="font-size: 2em; font-weight: bold;" id="tresorerieTotal">0 FCFA</div>
+                                <div style="font-size: 0.8em; opacity: 0.8; margin-top: 5px;">Caisse + Banque <span id="avecReport"></span></div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9em; opacity: 0.9;">DÉPENSES DU MOIS</div>
+                                <div style="font-size: 1.6em; font-weight: bold;" id="tresorerieDepenses">0 FCFA</div>
+                                <div style="font-size: 0.8em; opacity: 0.8; margin-top: 5px;">Charges exécutées</div>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 25px; background: var(--bg-card); border-radius: 8px; border: 3px solid var(--success); text-align: center;">
+                            <div style="font-size: 1em; color: var(--text-secondary); margin-bottom: 10px;">SOLDE DE TRÉSORERIE APRÈS CHARGES</div>
+                            <div style="font-size: 2.2em; font-weight: bold;" id="tresorerieSolde">0 FCFA</div>
+                            <div style="font-size: 0.85em; color: var(--text-secondary); margin-top: 8px;">Total Trésorerie - Dépenses</div>
+                        </div>
+
+                        <div id="actionCloture" style="margin-top: 20px; padding: 20px; background: var(--bg-card); border-radius: 8px; border: 2px solid var(--warning);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-size: 1.1em; font-weight: bold; color: var(--text-primary); margin-bottom: 5px;">
+                                        🔒 Clôture du mois
+                                    </div>
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">
+                                        Le solde actuel sera reporté sur le mois suivant
+                                    </div>
+                                </div>
+                                <button class="btn btn-warning" onclick="cloturerMois()" id="btnCloture">
+                                    Clôturer ce mois
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="moisCloture" style="margin-top: 20px; padding: 20px; background: var(--danger); color: white; border-radius: 8px; display: none;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 5px;">
+                                    🔒 Ce mois a été clôturé
+                                </div>
+                                <div style="font-size: 0.9em; opacity: 0.9;">
+                                    Les modifications ne sont plus possibles. Le solde a été reporté.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>💰 Configuration de la Trésorerie Mensuelle</h2>
+                    <form id="formBudget">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="budgetMois">Mois/Année *</label>
+                                <input type="month" id="budgetMois" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="budgetBanqueInput">Montant en Banque (FCFA) *</label>
+                                <input type="number" id="budgetBanqueInput" min="0" step="1" value="0" required oninput="updateBudgetTotal()">
+                                <small style="color: var(--text-secondary); margin-top: 5px; display: block;">
+                                    La caisse sera calculée automatiquement depuis le solde net
+                                </small>
+                            </div>
+                        </div>
+                        <div style="background: var(--info); opacity: 0.1; padding: 20px; border-radius: 5px; margin: 15px 0;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                                <div>
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">Caisse (auto)</div>
+                                    <div style="font-size: 1.3em; font-weight: bold;" id="budgetCaissePreview">0 FCFA</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">Banque</div>
+                                    <div style="font-size: 1.3em; font-weight: bold;" id="budgetBanquePreview">0 FCFA</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.85em; color: var(--text-secondary);">Total Trésorerie</div>
+                                    <div style="font-size: 1.3em; font-weight: bold; color: var(--primary);" id="budgetTotalPreview">0 FCFA</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">
+                                💾 Enregistrer la Trésorerie
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="loadCurrentMonthBudget()">
+                                🔄 Charger le Mois Actuel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Ajouter/Modifier une Dépense</h2>
+                    <form id="formDepense">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="depenseDate">Date *</label>
+                                <input type="date" id="depenseDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseNature">Nature *</label>
+                                <select id="depenseNature" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Salaire">Salaire</option>
+                                    <option value="Prime">Prime</option>
+                                    <option value="Loyer">Loyer</option>
+                                    <option value="Cie">Cie (Électricité)</option>
+                                    <option value="Internet">Internet</option>
+                                    <option value="Impôt">Impôt</option>
+                                    <option value="Eau">Eau</option>
+                                    <option value="Entretien Machine">Entretien Machine</option>
+                                    <option value="Consultation">Consultation</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseMontant">Montant (FCFA) *</label>
+                                <input type="number" id="depenseMontant" min="1" step="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseBeneficiaire">Bénéficiaire *</label>
+                                <input type="text" id="depenseBeneficiaire" required placeholder="Nom du bénéficiaire">
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseDatePaiement">Date de Paiement</label>
+                                <input type="date" id="depenseDatePaiement">
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseModePaiement">Mode de Paiement *</label>
+                                <select id="depenseModePaiement" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="Espèces">Espèces</option>
+                                    <option value="Chèque">Chèque</option>
+                                    <option value="Virement">Virement</option>
+                                    <option value="Mobile Money">Mobile Money</option>
+                                    <option value="Carte">Carte</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="depenseStatut">Statut *</label>
+                                <select id="depenseStatut" required>
+                                    <option value="NON EXÉCUTÉ">NON EXÉCUTÉ</option>
+                                    <option value="EXÉCUTÉ">EXÉCUTÉ</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="depenseObservations">Observations</label>
+                                <textarea id="depenseObservations" rows="3" placeholder="Remarques ou observations..."></textarea>
+                            </div>
+                        </div>
+                        <input type="hidden" id="depenseId">
+                        <input type="hidden" id="depensePeriode">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary" id="btnSaveDepense">
+                                Ajouter
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="cancelDepense()">
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">📋 Liste des Dépenses - <span id="depensesListMois"></span></h2>
+                        <button class="btn btn-success" onclick="exportCSV('depenses')">
+                            📥 Exporter CSV
+                        </button>
+                    </div>
+                    <div class="filters" style="margin-bottom: 20px;">
+                        <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                            <div class="form-group" style="margin: 0;">
+                                <label for="filterDepenseMois">Mois/Année</label>
+                                <input type="month" id="filterDepenseMois" onchange="filterDepenses()">
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label for="filterDepenseNature">Nature</label>
+                                <select id="filterDepenseNature" onchange="filterDepenses()">
+                                    <option value="">Toutes</option>
+                                    <option value="Salaire">Salaire</option>
+                                    <option value="Prime">Prime</option>
+                                    <option value="Loyer">Loyer</option>
+                                    <option value="Cie">Cie</option>
+                                    <option value="Internet">Internet</option>
+                                    <option value="Impôt">Impôt</option>
+                                    <option value="Eau">Eau</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin: 0;">
+                                <label for="filterDepenseStatut">Statut</label>
+                                <select id="filterDepenseStatut" onchange="filterDepenses()">
+                                    <option value="">Tous</option>
+                                    <option value="EXÉCUTÉ">Exécuté</option>
+                                    <option value="NON EXÉCUTÉ">Non exécuté</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-secondary" onclick="resetDepenseFilters()">
+                                Réinitialiser
+                            </button>
+                        </div>
+                    </div>
+                    <div id="depensesTable"></div>
+                    <div class="pagination" id="depensesPagination"></div>
+                </div>
+            </div>
+
+            <div id="settings" class="tab-content">
+                <div class="card">
+                    <h2>Ajouter un Nouvel Utilisateur</h2>
+                    <form id="formNewUser">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="newUserUsername">Nom d'utilisateur *</label>
+                                <input type="text" id="newUserUsername" required placeholder="Ex: agent2">
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserPassword">Mot de passe *</label>
+                                <input type="password" id="newUserPassword" required placeholder="Minimum 8 caractères">
+                            </div>
+                            <div class="form-group">
+                                <label for="newUserRole">Rôle *</label>
+                                <select id="newUserRole" required>
+                                    <option value="">Sélectionner...</option>
+                                    <option value="admin">Administrateur</option>
+                                    <option value="agent">Agent</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Permissions</label>
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="permDashboard" value="dashboard" style="width: 20px; height: 20px;">
+                                        <label for="permDashboard">Dashboard</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="permEntries" value="entries" style="width: 20px; height: 20px;">
+                                        <label for="permEntries">Entrées</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="permExits" value="exits" style="width: 20px; height: 20px;">
+                                        <label for="permExits">Sorties</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="permSettings" value="settings" style="width: 20px; height: 20px;">
+                                        <label for="permSettings">Paramètres</label>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <input type="checkbox" id="permDepenses" value="depenses" style="width: 20px; height: 20px;">
+                                        <label for="permDepenses">Dépenses/Trésorerie</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-primary">
+                                Créer l'Utilisateur
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetNewUserForm()">
+                                Annuler
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Gestion des Utilisateurs</h2>
+                    <div id="usersTable"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalDocument" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Détails du Document</h3>
+                <button class="close-modal" onclick="closeDocumentModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="modalTiersNom">Nom du tiers *</label>
+                <input type="text" id="modalTiersNom" required>
+            </div>
+            <div class="form-group">
+                <label for="modalMontantVerseTiers">Montant versé au tiers (FCFA) *</label>
+                <input 
+                    type="number" 
+                    id="modalMontantVerseTiers" 
+                    min="0" 
+                    step="1" 
+                    required 
+                    oninput="calculateMarge()">
+            </div>
+            <div style="background: var(--success); opacity: 0.1; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                <strong>Marge calculée:</strong> <span id="margeValue">0 FCFA</span>
+            </div>
+            <div class="btn-group" style="margin-top: 20px;">
+                <button class="btn btn-primary" onclick="validateDocument()">
+                    Valider
+                </button>
+                <button class="btn btn-secondary" onclick="closeDocumentModal()">
+                    Annuler
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalUser" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalUserTitle">Gérer Utilisateur</h3>
+                <button class="close-modal" onclick="closeUserModal()">&times;</button>
+            </div>
+            <form id="formUser">
+                <div class="form-group">
+                    <label for="modalUserUsername">Nom d'utilisateur</label>
+                    <input 
+                        type="text" 
+                        id="modalUserUsername" 
+                        readonly 
+                        style="background: var(--bg-main);">
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label for="modalUserRole">Rôle</label>
+                    <select id="modalUserRole">
+                        <option value="admin">Admin</option>
+                        <option value="agent">Agent</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Statut</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="modalUserActive" style="width: 20px; height: 20px;">
+                        <label for="modalUserActive">Compte actif</label>
+                    </div>
+                </div>
+                <input type="hidden" id="modalUserId">
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary">
+                        Enregistrer
+                    </button>
+                    <button type="button" class="btn btn-warning" onclick="resetUserPassword()">
+                        Réinitialiser MDP
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">
+                        Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            IDLE_TIMEOUT: 600000,
+            LOCKOUT_DURATION: 120000,
+            MAX_LOGIN_ATTEMPTS: 5,
+            PAGE_SIZE: 10,
+            DEVISE: 'XOF',
+            LOCALE: 'fr-FR',
+            VERSION: '3.0'
+        };
+
+        let currentUser = null;
+        let sessionActive = false;
+        let idleTimer = null;
+        let loginAttempts = {};
+        let currentPageEntrees = 1;
+        let currentPageSorties = 1;
+        let currentPageDepenses = 1;
+        let currentEntreeMontant = 0;
+        let filteredData = {
+            entrees: [],
+            sorties: [],
+            totalEntrees: 0,
+            totalSorties: 0,
+            net: 0,
+            margeCabinet: 0,
+            totalCabinet: 0,
+            margeDocs: 0,
+            totalDocs: 0,
+            verseTiers: 0,
+            dime: 0
+        };
+
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat(CONFIG.LOCALE, {
+                style: 'currency',
+                currency: CONFIG.DEVISE
+            }).format(amount);
+        };
+
+        const generateUID = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+
+        const escapeHtml = (text) => {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        };
+
+        const formatDate = (date) => {
+            return date.toISOString().split('T')[0];
+        };
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icon = type === 'success' ? '✔' : 
+                        type === 'error' ? '✗' : 
+                        type === 'warning' ? '⚠' : 'ℹ';
+            
+            toast.innerHTML = `
+                <span style="font-size: 20px;">${icon}</span>
+                <span>${escapeHtml(message)}</span>
+                <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
+        }
+
+        async function hashPasswordPBKDF2(password, salt = null) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            
+            if (!salt) {
+                salt = crypto.getRandomValues(new Uint8Array(16));
+            } else if (typeof salt === 'string') {
+                salt = new Uint8Array(salt.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+            }
+            
+            const key = await crypto.subtle.importKey(
+                'raw',
+                data,
+                { name: 'PBKDF2' },
+                false,
+                ['deriveBits']
+            );
+            
+            const derivedBits = await crypto.subtle.deriveBits(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                key,
+                256
+            );
+            
+            const hashArray = Array.from(new Uint8Array(derivedBits));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            return saltHex + ':' + hashHex;
+        }
+
+        async function verifyPasswordPBKDF2(password, storedHash) {
+            const [salt, hash] = storedHash.split(':');
+            const computedHash = await hashPasswordPBKDF2(password, salt);
+            return computedHash === storedHash;
+        }
+
+        const initStorage = () => {
+            if (!localStorage.getItem('ec_entries')) localStorage.setItem('ec_entries', JSON.stringify([]));
+            if (!localStorage.getItem('ec_exits')) localStorage.setItem('ec_exits', JSON.stringify([]));
+            if (!localStorage.getItem('ec_seq')) localStorage.setItem('ec_seq', JSON.stringify({ entrees: 0, sorties: 0 }));
+            if (!localStorage.getItem('ec_audit')) localStorage.setItem('ec_audit', JSON.stringify([]));
+            if (!localStorage.getItem('ec_users')) initUsers();
+            if (!localStorage.getItem('ec_theme')) localStorage.setItem('ec_theme', 'light');
+            if (!localStorage.getItem('ec_budgets')) localStorage.setItem('ec_budgets', JSON.stringify([]));
+            if (!localStorage.getItem('ec_depenses')) localStorage.setItem('ec_depenses', JSON.stringify([]));
+            if (!localStorage.getItem('ec_clotures')) localStorage.setItem('ec_clotures', JSON.stringify([]));
+        };
+
+        async function initUsers() {
+            const users = [
+                {
+                    id: generateUID(),
+                    username: 'admin',
+                    passwordHash: await hashPasswordPBKDF2('PSI@2025A'),
+                    role: 'admin',
+                    permissions: ['dashboard', 'entries', 'exits', 'settings', 'depenses'],
+                    active: true
+                },
+                {
+                    id: generateUID(),
+                    username: 'agent1',
+                    passwordHash: await hashPasswordPBKDF2('PSI@AGENT1'),
+                    role: 'agent',
+                    permissions: ['entries', 'exits'],
+                    active: true
+                }
+            ];
+            localStorage.setItem('ec_users', JSON.stringify(users));
+        }
+
+        const getEntrees = () => JSON.parse(localStorage.getItem('ec_entries') || '[]');
+        const getSorties = () => JSON.parse(localStorage.getItem('ec_exits') || '[]');
+        const getSeq = () => JSON.parse(localStorage.getItem('ec_seq') || '{"entrees":0,"sorties":0}');
+        const getUsers = () => JSON.parse(localStorage.getItem('ec_users') || '[]');
+        const getBudgets = () => JSON.parse(localStorage.getItem('ec_budgets') || '[]');
+        const getDepenses = () => JSON.parse(localStorage.getItem('ec_depenses') || '[]');
+        const getClotures = () => JSON.parse(localStorage.getItem('ec_clotures') || '[]');
+
+        const saveEntrees = (data) => localStorage.setItem('ec_entries', JSON.stringify(data));
+        const saveSorties = (data) => localStorage.setItem('ec_exits', JSON.stringify(data));
+        const saveSeq = (data) => localStorage.setItem('ec_seq', JSON.stringify(data));
+        const saveUsers = (data) => localStorage.setItem('ec_users', JSON.stringify(data));
+        const saveBudgets = (data) => localStorage.setItem('ec_budgets', JSON.stringify(data));
+        const saveDepenses = (data) => localStorage.setItem('ec_depenses', JSON.stringify(data));
+        const saveClotures = (data) => localStorage.setItem('ec_clotures', JSON.stringify(data));
+
+        function logAudit(action, details) {
+            const audit = JSON.parse(localStorage.getItem('ec_audit') || '[]');
+            audit.push({
+                timestamp: new Date().toISOString(),
+                user: currentUser?.username || 'system',
+                action: action,
+                details: details
+            });
+            if (audit.length > 1000) audit.shift();
+            localStorage.setItem('ec_audit', JSON.stringify(audit));
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('ec_theme') || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('ec_theme', newTheme);
+            showToast(`Thème ${newTheme === 'dark' ? 'sombre' : 'clair'} activé`, 'success');
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('ec_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            
+            if (loginAttempts[username]) {
+                const attempt = loginAttempts[username];
+                if (attempt.lockedUntil && Date.now() < attempt.lockedUntil) {
+                    const remainingTime = Math.ceil((attempt.lockedUntil - Date.now()) / 1000);
+                    showToast(`Compte bloqué. Réessayez dans ${remainingTime}s`, 'error');
+                    return;
+                }
+                if (attempt.lockedUntil && Date.now() >= attempt.lockedUntil) {
+                    loginAttempts[username] = { count: 0, lockedUntil: null };
+                }
+            }
+            
+            const user = getUsers().find(u => u.username === username);
+            
+            if (!user) {
+                recordFailedAttempt(username);
+                showToast('Identifiants incorrects', 'error');
+                return;
+            }
+            
+            if (!user.active) {
+                showToast('Compte bloqué', 'error');
+                return;
+            }
+            
+            const isValidPassword = await verifyPasswordPBKDF2(password, user.passwordHash);
+            
+            if (!isValidPassword) {
+                recordFailedAttempt(username);
+                const remaining = CONFIG.MAX_LOGIN_ATTEMPTS - (loginAttempts[username]?.count || 0);
+                showToast(`Mot de passe incorrect. ${remaining} tentative(s) restante(s)`, 'error');
+                return;
+            }
+            
+            if (loginAttempts[username]) {
+                delete loginAttempts[username];
+            }
+            
+            currentUser = user;
+            sessionActive = true;
+            
+            logAudit('LOGIN', `User ${username} logged in`);
+            
+            document.getElementById('loginPage').classList.remove('active');
+            document.getElementById('mainApp').classList.add('active');
+            document.getElementById('currentUsername').textContent = user.username;
+            document.getElementById('currentUserRole').textContent = 
+                user.role === 'admin' ? 'Administrateur' : 'Agent';
+            
+            applyPermissions();
+            resetIdleTimer();
+            refreshDashboard();
+            renderEntreesTable();
+            renderSortiesTable();
+            
+            document.getElementById('loginForm').reset();
+            showToast('Connexion réussie', 'success');
+        }
+
+        function recordFailedAttempt(username) {
+            if (!loginAttempts[username]) {
+                loginAttempts[username] = { count: 0, lockedUntil: null };
+            }
+            
+            loginAttempts[username].count++;
+            
+            if (loginAttempts[username].count >= CONFIG.MAX_LOGIN_ATTEMPTS) {
+                loginAttempts[username].lockedUntil = Date.now() + CONFIG.LOCKOUT_DURATION;
+            }
+        }
+
+        function applyPermissions() {
+            if (!currentUser) return;
+            
+            const permissions = currentUser.permissions || [];
+            
+            document.getElementById('tabDashboard').disabled = !permissions.includes('dashboard');
+            document.getElementById('tabEntrees').disabled = !permissions.includes('entries');
+            document.getElementById('tabSorties').disabled = !permissions.includes('exits');
+            document.getElementById('tabSettings').disabled = !permissions.includes('settings');
+            
+            const depensesTab = document.getElementById('tabDepenses');
+            if (depensesTab) {
+                depensesTab.style.display = currentUser.role === 'admin' ? 'inline-flex' : 'none';
+            }
+            
+            const resetBtn = document.getElementById('btnResetDemo');
+            if (resetBtn) {
+                resetBtn.style.display = currentUser.role === 'admin' ? 'inline-flex' : 'none';
+            }
+        }
+
+        function logout() {
+            if (currentUser) {
+                logAudit('LOGOUT', `User ${currentUser.username} logged out`);
+            }
+            
+            currentUser = null;
+            sessionActive = false;
+            clearTimeout(idleTimer);
+            
+            document.getElementById('mainApp').classList.remove('active');
+            document.getElementById('loginPage').classList.add('active');
+            
+            showToast('Déconnexion réussie', 'success');
+        }
+
+        function resetIdleTimer() {
+            clearTimeout(idleTimer);
+            
+            if (sessionActive) {
+                idleTimer = setTimeout(() => {
+                    showToast('Session expirée', 'warning');
+                    logout();
+                }, CONFIG.IDLE_TIMEOUT);
+            }
+        }
+
+        function ensureAuth() {
+            if (!sessionActive || !currentUser) {
+                logout();
+                return false;
+            }
+            return true;
+        }
+
+        function hasPermission(permission) {
+            return currentUser && currentUser.permissions.includes(permission);
+        }
+
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => {
+                if (sessionActive) {
+                    resetIdleTimer();
+                }
+            });
+        });
+
+        function switchTab(tabName) {
+            if (!ensureAuth()) return;
+            
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            const tabContent = document.getElementById(tabName);
+            if (tabContent) {
+                tabContent.classList.add('active');
+            }
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const tabBtnId = 'tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1);
+            const tabBtn = document.getElementById(tabBtnId);
+            if (tabBtn) {
+                tabBtn.classList.add('active');
+            }
+            
+            if (tabName === 'dashboard') {
+                refreshDashboard();
+            } else if (tabName === 'entrees') {
+                renderEntreesTable();
+            } else if (tabName === 'sorties') {
+                renderSortiesTable();
+            } else if (tabName === 'depenses') {
+                if (currentUser.role === 'admin') {
+                    loadCurrentMonthBudget();
+                }
+            } else if (tabName === 'settings') {
+                renderUsersTable();
+            }
+        }
+
+        function generateRef(type) {
+            if (!ensureAuth()) return;
+            
+            const seq = getSeq();
+            const year = new Date().getFullYear();
+            
+            if (type === 'entree') {
+                seq.entrees++;
+                const ref = `EC-${year}-${String(seq.entrees).padStart(4, '0')}`;
+                document.getElementById('entreeRef').value = ref;
+            } else {
+                seq.sorties++;
+                const ref = `SC-${year}-${String(seq.sorties).padStart(4, '0')}`;
+                document.getElementById('sortieRef').value = ref;
+            }
+            
+            saveSeq(seq);
+        }
+
+        function checkDocumentNature() {
+            if (!ensureAuth()) return;
+            
+            const nature = document.getElementById('entreeNature').value;
+            const montantInput = document.getElementById('entreeMontant');
+            const montant = parseFloat(montantInput.value) || 0;
+            
+            if (nature === 'Documents de Voyage' || nature === 'Autres Documents') {
+                if (montant > 0) {
+                    currentEntreeMontant = montant;
+                    openDocumentModal(montant);
+                } else {
+                    showToast('Veuillez entrer un montant valide', 'warning');
+                    montantInput.focus();
+                }
+            } else {
+                document.getElementById('entreeTiersNom').value = '';
+                document.getElementById('entreeMontantVerseTiers').value = '0';
+                currentEntreeMontant = 0;
+            }
+        }
+
+        function openDocumentModal(montant) {
+            const modal = document.getElementById('modalDocument');
+            modal.classList.add('active');
+            
+            const tiersNom = document.getElementById('entreeTiersNom').value;
+            const montantVerse = parseFloat(document.getElementById('entreeMontantVerseTiers').value) || 0;
+            
+            document.getElementById('modalTiersNom').value = tiersNom;
+            document.getElementById('modalMontantVerseTiers').value = montantVerse;
+            document.getElementById('modalMontantVerseTiers').max = montant;
+            
+            calculateMarge();
+        }
+
+        function closeDocumentModal() {
+            document.getElementById('modalDocument').classList.remove('active');
+        }
+
+        function calculateMarge() {
+            const montantTotal = currentEntreeMontant;
+            const montantVerseInput = document.getElementById('modalMontantVerseTiers');
+            let montantVerse = parseFloat(montantVerseInput.value) || 0;
+            
+            if (montantVerse < 0) {
+                montantVerse = 0;
+                montantVerseInput.value = 0;
+            }
+            
+            if (montantVerse > montantTotal) {
+                montantVerse = montantTotal;
+                montantVerseInput.value = montantTotal;
+            }
+            
+            const marge = montantTotal - montantVerse;
+            document.getElementById('margeValue').textContent = formatCurrency(marge);
+        }
+
+        function validateDocument() {
+            const tiersNom = document.getElementById('modalTiersNom').value.trim();
+            const montantVerse = parseFloat(document.getElementById('modalMontantVerseTiers').value) || 0;
+            const montantTotal = currentEntreeMontant;
+            
+            if (!tiersNom) {
+                showToast('Le nom du tiers est obligatoire', 'error');
+                return;
+            }
+            
+            if (montantVerse < 0 || montantVerse > montantTotal) {
+                showToast('Montant versé invalide', 'error');
+                return;
+            }
+            
+            document.getElementById('entreeTiersNom').value = tiersNom;
+            document.getElementById('entreeMontantVerseTiers').value = montantVerse;
+            
+            closeDocumentModal();
+            showToast('Détails du document enregistrés', 'success');
+        }
+
+        function calculateEntreeMarge(nature, montant, montantVerseTiers) {
+            if (nature === 'Frais de Cabinet') {
+                return montant;
+            } else if (nature === 'Documents de Voyage' || nature === 'Autres Documents') {
+                return montant - montantVerseTiers;
+            }
+            return 0;
+        }
+
+        function saveEntree(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || !hasPermission('entries')) return;
+            
+            const id = document.getElementById('entreeId').value || generateUID();
+            const date = document.getElementById('entreeDate').value;
+            const ref = document.getElementById('entreeRef').value.trim();
+            const nom = document.getElementById('entreeNom').value.trim();
+            const prenoms = document.getElementById('entreePrenoms').value.trim();
+            const nature = document.getElementById('entreeNature').value;
+            const montant = parseFloat(document.getElementById('entreeMontant').value);
+            const modePaiement = document.getElementById('entreeMode').value;
+            
+            if (!date || !ref || !nom || !prenoms || !nature || montant <= 0 || !modePaiement) {
+                showToast('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            let tiersNom = document.getElementById('entreeTiersNom').value.trim();
+            let montantVerseTiers = parseFloat(document.getElementById('entreeMontantVerseTiers').value) || 0;
+            
+            const isDocument = nature === 'Documents de Voyage' || nature === 'Autres Documents';
+            
+            if (isDocument && (!tiersNom || montantVerseTiers < 0 || montantVerseTiers > montant)) {
+                showToast('Détails du document incomplets', 'error');
+                currentEntreeMontant = montant;
+                openDocumentModal(montant);
+                return;
+            }
+            
+            if (!isDocument) {
+                tiersNom = '';
+                montantVerseTiers = 0;
+            }
+            
+            const marge = calculateEntreeMarge(nature, montant, montantVerseTiers);
+            
+            const entrees = getEntrees();
+            const isUpdate = entrees.some(e => e.id === id);
+            const existing = entrees.find(e => e.id === id);
+            
+            if (currentUser.role === 'agent' && isUpdate && existing.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez modifier que vos propres entrées', 'error');
+                return;
+            }
+            
+            if (entrees.some(e => e.ref === ref && e.id !== id)) {
+                showToast('Cette référence existe déjà', 'error');
+                return;
+            }
+            
+            const entree = {
+                id: id,
+                date: date,
+                ref: ref,
+                nom: nom,
+                prenoms: prenoms,
+                nature: nature,
+                montant: montant,
+                modePaiement: modePaiement,
+                isDocument: isDocument,
+                tiersNom: tiersNom || null,
+                montantVerseTiers: montantVerseTiers,
+                marge: marge,
+                createdBy: isUpdate ? existing.createdBy : currentUser.username,
+                createdAt: isUpdate ? existing.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (isUpdate) {
+                const index = entrees.findIndex(e => e.id === id);
+                entrees[index] = entree;
+                logAudit('UPDATE_ENTREE', `Entrée ${ref} updated`);
+                showToast('Entrée modifiée avec succès', 'success');
+            } else {
+                entrees.push(entree);
+                logAudit('ADD_ENTREE', `Entrée ${ref} added`);
+                showToast('Entrée ajoutée avec succès', 'success');
+            }
+            
+            saveEntrees(entrees.sort((a, b) => new Date(b.date) - new Date(a.date)));
+            renderEntreesTable();
+            
+            if (hasPermission('dashboard')) {
+                refreshDashboard();
+            }
+            
+            cancelEntree();
+        }
+
+        function editEntree(id) {
+            if (!ensureAuth() || !hasPermission('entries')) return;
+            
+            const entree = getEntrees().find(e => e.id === id);
+            
+            if (currentUser.role === 'agent' && entree.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez modifier que vos propres entrées', 'error');
+                return;
+            }
+            
+            if (entree) {
+                document.getElementById('entreeId').value = entree.id;
+                document.getElementById('entreeDate').value = entree.date;
+                document.getElementById('entreeRef').value = entree.ref;
+                document.getElementById('entreeNom').value = entree.nom;
+                document.getElementById('entreePrenoms').value = entree.prenoms;
+                document.getElementById('entreeNature').value = entree.nature;
+                document.getElementById('entreeMontant').value = entree.montant;
+                document.getElementById('entreeMode').value = entree.modePaiement;
+                document.getElementById('entreeTiersNom').value = entree.tiersNom || '';
+                document.getElementById('entreeMontantVerseTiers').value = entree.montantVerseTiers || 0;
+                
+                document.getElementById('btnSaveEntree').textContent = 'Modifier';
+            }
+        }
+
+        function cancelEntree() {
+            document.getElementById('formEntree').reset();
+            document.getElementById('entreeId').value = '';
+            document.getElementById('entreeTiersNom').value = '';
+            document.getElementById('entreeMontantVerseTiers').value = '0';
+            currentEntreeMontant = 0;
+            document.getElementById('btnSaveEntree').textContent = 'Ajouter';
+            closeDocumentModal();
+        }
+
+        function deleteEntree(id) {
+            if (!ensureAuth() || !hasPermission('entries')) return;
+            
+            if (!confirm('Supprimer cette entrée ?')) return;
+            
+            let entrees = getEntrees();
+            const entree = entrees.find(e => e.id === id);
+            
+            if (currentUser.role === 'agent' && entree.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez supprimer que vos propres entrées', 'error');
+                return;
+            }
+            
+            entrees = entrees.filter(e => e.id !== id);
+            saveEntrees(entrees);
+            
+            logAudit('DELETE_ENTREE', `Entrée ${entree.ref} deleted`);
+            showToast('Entrée supprimée', 'success');
+            
+            renderEntreesTable();
+            if (hasPermission('dashboard')) {
+                refreshDashboard();
+            }
+        }
+
+        function renderEntreesTable(page = 1) {
+            if (!ensureAuth() || !hasPermission('entries')) return;
+            
+            currentPageEntrees = page;
+            
+            const entrees = getEntrees().filter(e => 
+                currentUser.role === 'admin' || e.createdBy === currentUser.username
+            );
+            
+            const tableDiv = document.getElementById('entreesTable');
+            const paginationDiv = document.getElementById('entreesPagination');
+            
+            if (entrees.length === 0) {
+                tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Aucune entrée</div>';
+                paginationDiv.innerHTML = '';
+                return;
+            }
+            
+            const totalPages = Math.ceil(entrees.length / CONFIG.PAGE_SIZE);
+            const startIndex = (page - 1) * CONFIG.PAGE_SIZE;
+            const pageEntrees = entrees.slice(startIndex, startIndex + CONFIG.PAGE_SIZE);
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Réf.</th>
+                            <th>Client</th>
+                            <th>Nature</th>
+                            <th>Montant</th>
+                            <th>Mode</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            pageEntrees.forEach(entree => {
+                const badgeClass = entree.isDocument ? 'badge-doc' : 
+                                  entree.nature === 'Frais de Cabinet' ? 'badge-cabinet' : 'badge-autre';
+                
+                html += `
+                    <tr>
+                        <td>${entree.date}</td>
+                        <td>${escapeHtml(entree.ref)}</td>
+                        <td>${escapeHtml(entree.nom)} ${escapeHtml(entree.prenoms)}</td>
+                        <td><span class="badge ${badgeClass}">${escapeHtml(entree.nature)}</span></td>
+                        <td>${formatCurrency(entree.montant)}</td>
+                        <td>${escapeHtml(entree.modePaiement)}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-warning" onclick="editEntree('${entree.id}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteEntree('${entree.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+            
+            paginationDiv.innerHTML = `
+                <button onclick="renderEntreesTable(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+                    ‹ Précédent
+                </button>
+                <span>Page ${page} / ${totalPages}</span>
+                <button onclick="renderEntreesTable(${page + 1})" ${page === totalPages ? 'disabled' : ''}>
+                    Suivant ›
+                </button>
+            `;
+        }
+
+        function saveSortie(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || !hasPermission('exits')) return;
+            
+            const id = document.getElementById('sortieId').value || generateUID();
+            const date = document.getElementById('sortieDate').value;
+            const ref = document.getElementById('sortieRef').value.trim();
+            const nature = document.getElementById('sortieNature').value.trim();
+            const fournisseur = document.getElementById('sortieFournisseur').value.trim();
+            const montant = parseFloat(document.getElementById('sortieMontant').value);
+            
+            if (!date || !ref || !nature || !fournisseur || montant <= 0) {
+                showToast('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            const sorties = getSorties();
+            const isUpdate = sorties.some(s => s.id === id);
+            const existing = sorties.find(s => s.id === id);
+            
+            if (currentUser.role === 'agent' && isUpdate && existing.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez modifier que vos propres sorties', 'error');
+                return;
+            }
+            
+            if (sorties.some(s => s.ref === ref && s.id !== id)) {
+                showToast('Cette référence existe déjà', 'error');
+                return;
+            }
+            
+            const sortie = {
+                id: id,
+                date: date,
+                ref: ref,
+                nature: nature,
+                fournisseur: fournisseur,
+                montant: montant,
+                createdBy: isUpdate ? existing.createdBy : currentUser.username,
+                createdAt: isUpdate ? existing.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (isUpdate) {
+                const index = sorties.findIndex(s => s.id === id);
+                sorties[index] = sortie;
+                logAudit('UPDATE_SORTIE', `Sortie ${ref} updated`);
+                showToast('Sortie modifiée', 'success');
+            } else {
+                sorties.push(sortie);
+                logAudit('ADD_SORTIE', `Sortie ${ref} added`);
+                showToast('Sortie ajoutée', 'success');
+            }
+            
+            saveSorties(sorties.sort((a, b) => new Date(b.date) - new Date(a.date)));
+            renderSortiesTable();
+            
+            if (hasPermission('dashboard')) {
+                refreshDashboard();
+            }
+            
+            cancelSortie();
+        }
+
+        function editSortie(id) {
+            if (!ensureAuth() || !hasPermission('exits')) return;
+            
+            const sortie = getSorties().find(s => s.id === id);
+            
+            if (currentUser.role === 'agent' && sortie.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez modifier que vos propres sorties', 'error');
+                return;
+            }
+            
+            if (sortie) {
+                document.getElementById('sortieId').value = sortie.id;
+                document.getElementById('sortieDate').value = sortie.date;
+                document.getElementById('sortieRef').value = sortie.ref;
+                document.getElementById('sortieNature').value = sortie.nature;
+                document.getElementById('sortieFournisseur').value = sortie.fournisseur;
+                document.getElementById('sortieMontant').value = sortie.montant;
+                
+                document.getElementById('btnSaveSortie').textContent = 'Modifier';
+            }
+        }
+
+        function cancelSortie() {
+            document.getElementById('formSortie').reset();
+            document.getElementById('sortieId').value = '';
+            document.getElementById('btnSaveSortie').textContent = 'Ajouter';
+        }
+
+        function deleteSortie(id) {
+            if (!ensureAuth() || !hasPermission('exits')) return;
+            
+            if (!confirm('Supprimer cette sortie ?')) return;
+            
+            let sorties = getSorties();
+            const sortie = sorties.find(s => s.id === id);
+            
+            if (currentUser.role === 'agent' && sortie.createdBy !== currentUser.username) {
+                showToast('Vous ne pouvez supprimer que vos propres sorties', 'error');
+                return;
+            }
+            
+            sorties = sorties.filter(s => s.id !== id);
+            saveSorties(sorties);
+            
+            logAudit('DELETE_SORTIE', `Sortie ${sortie.ref} deleted`);
+            showToast('Sortie supprimée', 'success');
+            
+            renderSortiesTable();
+            if (hasPermission('dashboard')) {
+                refreshDashboard();
+            }
+        }
+
+        function renderSortiesTable(page = 1) {
+            if (!ensureAuth() || !hasPermission('exits')) return;
+            
+            currentPageSorties = page;
+            
+            const sorties = getSorties().filter(s => 
+                currentUser.role === 'admin' || s.createdBy === currentUser.username
+            );
+            
+            const tableDiv = document.getElementById('sortiesTable');
+            const paginationDiv = document.getElementById('sortiesPagination');
+            
+            if (sorties.length === 0) {
+                tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Aucune sortie</div>';
+                paginationDiv.innerHTML = '';
+                return;
+            }
+            
+            const totalPages = Math.ceil(sorties.length / CONFIG.PAGE_SIZE);
+            const startIndex = (page - 1) * CONFIG.PAGE_SIZE;
+            const pageSorties = sorties.slice(startIndex, startIndex + CONFIG.PAGE_SIZE);
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Réf.</th>
+                            <th>Nature</th>
+                            <th>Fournisseur</th>
+                            <th>Montant</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            pageSorties.forEach(sortie => {
+                html += `
+                    <tr>
+                        <td>${sortie.date}</td>
+                        <td>${escapeHtml(sortie.ref)}</td>
+                        <td>${escapeHtml(sortie.nature)}</td>
+                        <td>${escapeHtml(sortie.fournisseur)}</td>
+                        <td>${formatCurrency(sortie.montant)}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-warning" onclick="editSortie('${sortie.id}')">✏️</button>
+                            <button class="btn btn-danger" onclick="deleteSortie('${sortie.id}')">🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+            
+            paginationDiv.innerHTML = `
+                <button onclick="renderSortiesTable(${page - 1})" ${page === 1 ? 'disabled' : ''}>
+                    ‹ Précédent
+                </button>
+                <span>Page ${page} / ${totalPages}</span>
+                <button onclick="renderSortiesTable(${page + 1})" ${page === totalPages ? 'disabled' : ''}>
+                    Suivant ›
+                </button>
+            `;
+        }
+
+        function applyFilters() {
+            if (!ensureAuth() || !hasPermission('dashboard')) return;
+            
+            const dateDebut = document.getElementById('filterDateDebut').value;
+            const dateFin = document.getElementById('filterDateFin').value;
+            const nature = document.getElementById('filterNature').value;
+            const mode = document.getElementById('filterMode').value;
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            
+            const allEntrees = getEntrees();
+            const allSorties = getSorties();
+            
+            const filteredEntrees = allEntrees.filter(e => {
+                const dateMatch = (!dateDebut || e.date >= dateDebut) && (!dateFin || e.date <= dateFin);
+                const natureMatch = !nature || e.nature === nature;
+                const modeMatch = !mode || e.modePaiement === mode;
+                const searchMatch = !search || 
+                    e.nom.toLowerCase().includes(search) || 
+                    e.prenoms.toLowerCase().includes(search) || 
+                    e.ref.toLowerCase().includes(search);
+                
+                return dateMatch && natureMatch && modeMatch && searchMatch;
+            });
+            
+            const filteredSorties = allSorties.filter(s => {
+                const dateMatch = (!dateDebut || s.date >= dateDebut) && (!dateFin || s.date <= dateFin);
+                const searchMatch = !search || 
+                    s.fournisseur.toLowerCase().includes(search) || 
+                    s.ref.toLowerCase().includes(search);
+                
+                return dateMatch && searchMatch;
+            });
+            
+            const totalEntrees = filteredEntrees.reduce((sum, e) => sum + e.montant, 0);
+            const totalSorties = filteredSorties.reduce((sum, s) => sum + s.montant, 0);
+            
+            const cabinetEntrees = filteredEntrees.filter(e => e.nature === 'Frais de Cabinet');
+            const totalCabinet = cabinetEntrees.reduce((sum, e) => sum + e.montant, 0);
+            const margeCabinet = cabinetEntrees.reduce((sum, e) => sum + e.marge, 0);
+            
+            const docEntrees = filteredEntrees.filter(e => e.isDocument);
+            const totalDocs = docEntrees.reduce((sum, e) => sum + e.montant, 0);
+            const verseTiers = docEntrees.reduce((sum, e) => sum + e.montantVerseTiers, 0);
+            const margeDocs = docEntrees.reduce((sum, e) => sum + e.marge, 0);
+            
+            const dime = (margeCabinet + margeDocs) * 0.1;
+            
+            filteredData = {
+                entrees: filteredEntrees,
+                sorties: filteredSorties,
+                totalEntrees: totalEntrees,
+                totalSorties: totalSorties,
+                net: totalEntrees - totalSorties,
+                margeCabinet: margeCabinet,
+                totalCabinet: totalCabinet,
+                margeDocs: margeDocs,
+                totalDocs: totalDocs,
+                verseTiers: verseTiers,
+                dime: dime
+            };
+            
+            renderKPIs();
+            renderDocumentDetails();
+            renderChartCashFlow();
+            renderChartNature();
+            renderChartMargeDime();
+            
+            showToast('Filtres appliqués', 'success');
+        }
+
+        function resetFilters() {
+            if (!ensureAuth() || !hasPermission('dashboard')) return;
+            
+            document.getElementById('filterDateDebut').value = '';
+            document.getElementById('filterDateFin').value = '';
+            document.getElementById('filterNature').value = '';
+            document.getElementById('filterMode').value = '';
+            document.getElementById('filterSearch').value = '';
+            
+            refreshDashboard();
+        }
+
+        function refreshDashboard() {
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            document.getElementById('filterDateDebut').value = formatDate(firstDay);
+            document.getElementById('filterDateFin').value = formatDate(today);
+            
+            applyFilters();
+        }
+
+        function renderKPIs() {
+            const {
+                totalEntrees,
+                totalSorties,
+                net,
+                margeCabinet,
+                totalCabinet,
+                margeDocs,
+                totalDocs,
+                verseTiers,
+                dime
+            } = filteredData;
+            
+            const kpiGrid = document.getElementById('kpiGrid');
+            
+            const kpis = [
+                {
+                    label: 'Total Entrées',
+                    value: formatCurrency(totalEntrees),
+                    class: 'success',
+                    sub: ''
+                },
+                {
+                    label: 'Total Sorties',
+                    value: formatCurrency(totalSorties),
+                    class: 'warning',
+                    sub: ''
+                },
+                {
+                    label: 'Solde Net',
+                    value: formatCurrency(net),
+                    class: net >= 0 ? 'info' : 'danger',
+                    sub: ''
+                },
+                {
+                    label: 'Frais Cabinet',
+                    value: formatCurrency(totalCabinet),
+                    class: 'cabinet',
+                    sub: `Marge: ${formatCurrency(margeCabinet)}`
+                },
+                {
+                    label: 'Documents',
+                    value: formatCurrency(totalDocs),
+                    class: 'info',
+                    sub: `Versé Tiers: ${formatCurrency(verseTiers)} | Marge: ${formatCurrency(margeDocs)}`
+                },
+                {
+                    label: 'Dîme (10%)',
+                    value: formatCurrency(dime),
+                    class: 'dime',
+                    sub: `Sur marge totale: ${formatCurrency(margeCabinet + margeDocs)}`
+                }
+            ];
+            
+            kpiGrid.innerHTML = kpis.map(kpi => `
+                <div class="kpi-card ${kpi.class}">
+                    <div class="kpi-label">${kpi.label}</div>
+                    <div class="kpi-value">${kpi.value}</div>
+                    ${kpi.sub ? `<div class="kpi-sub">${kpi.sub}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function renderDocumentDetails() {
+            const detailsDiv = document.getElementById('documentsDetails');
+            const documents = filteredData.entrees.filter(e => e.isDocument);
+            
+            if (documents.length === 0) {
+                detailsDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Aucun document</div>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Réf.</th>
+                            <th>Nature</th>
+                            <th>Client</th>
+                            <th>Tiers</th>
+                            <th>Montant Total</th>
+                            <th>Montant Tiers</th>
+                            <th>Marge Nette</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            let totalMarge = 0;
+            
+            documents.forEach(doc => {
+                totalMarge += doc.marge;
+                html += `
+                    <tr>
+                        <td>${escapeHtml(doc.ref)}</td>
+                        <td>${escapeHtml(doc.nature)}</td>
+                        <td>${escapeHtml(doc.nom)} ${escapeHtml(doc.prenoms)}</td>
+                        <td>${escapeHtml(doc.tiersNom || 'N/A')}</td>
+                        <td>${formatCurrency(doc.montant)}</td>
+                        <td>${formatCurrency(doc.montantVerseTiers)}</td>
+                        <td><span style="font-weight: bold; color: ${doc.marge >= 0 ? '#11998e' : '#f5576c'}">${formatCurrency(doc.marge)}</span></td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6" style="text-align: right; font-weight: bold;">TOTAL MARGE:</td>
+                            <td style="font-weight: bold; color: ${totalMarge >= 0 ? '#11998e' : '#f5576c'}">${formatCurrency(totalMarge)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+            
+            detailsDiv.innerHTML = html;
+        }
+
+        function renderChartCashFlow() {
+            const canvas = document.getElementById('chartCashFlow');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const dailyData = {};
+            
+            filteredData.entrees.forEach(e => {
+                if (!dailyData[e.date]) {
+                    dailyData[e.date] = { in: 0, out: 0 };
+                }
+                dailyData[e.date].in += e.montant;
+            });
+            
+            filteredData.sorties.forEach(s => {
+                if (!dailyData[s.date]) {
+                    dailyData[s.date] = { in: 0, out: 0 };
+                }
+                dailyData[s.date].out += s.montant;
+            });
+            
+            const dates = Object.keys(dailyData).sort();
+            
+            if (dates.length === 0) {
+                ctx.font = '16px Segoe UI';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('Aucune donnée pour la période', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            let cumulativeBalance = 0;
+            const dataPoints = dates.map(date => {
+                const { in: inAmount, out: outAmount } = dailyData[date];
+                cumulativeBalance += inAmount - outAmount;
+                return {
+                    date: date,
+                    in: inAmount,
+                    out: outAmount,
+                    balance: cumulativeBalance
+                };
+            });
+            
+            const maxValue = Math.max(...dataPoints.map(d => Math.max(d.in, d.out, Math.abs(d.balance)))) || 1;
+            const chartHeight = canvas.height - 100;
+            const chartWidth = canvas.width - 100;
+            const barWidth = Math.max(20, chartWidth / dates.length / 3);
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, canvas.height - 50);
+            ctx.lineTo(canvas.width - 50, canvas.height - 50);
+            ctx.stroke();
+            
+            dataPoints.forEach((point, index) => {
+                const x = 50 + (index * chartWidth / dataPoints.length) + (chartWidth / dataPoints.length / 2);
+                const inHeight = (point.in / maxValue) * chartHeight;
+                const outHeight = (point.out / maxValue) * chartHeight;
+                const balanceY = canvas.height - 50 - ((point.balance / maxValue) * chartHeight * 0.5);
+                
+                ctx.fillStyle = '#38ef7d';
+                ctx.fillRect(x - barWidth * 1.5, canvas.height - 50 - inHeight, barWidth, inHeight);
+                
+                ctx.fillStyle = '#f5576c';
+                ctx.fillRect(x - barWidth * 0.5, canvas.height - 50 - outHeight, barWidth, outHeight);
+                
+                ctx.fillStyle = '#4facfe';
+                ctx.beginPath();
+                ctx.arc(x + barWidth, balanceY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (index > 0) {
+                    const prevX = 50 + ((index - 1) * chartWidth / dataPoints.length) + (chartWidth / dataPoints.length / 2) + barWidth;
+                    const prevBalance = dataPoints[index - 1].balance;
+                    const prevY = canvas.height - 50 - ((prevBalance / maxValue) * chartHeight * 0.5);
+                    
+                    ctx.strokeStyle = '#4facfe';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevY);
+                    ctx.lineTo(x + barWidth, balanceY);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(point.date.slice(5), x, canvas.height - 30);
+            });
+            
+            ctx.font = '12px Segoe UI';
+            ctx.fillStyle = '#38ef7d';
+            ctx.fillRect(canvas.width - 180, 20, 15, 15);
+            ctx.fillStyle = '#333';
+            ctx.fillText('Entrées', canvas.width - 100, 32);
+            
+            ctx.fillStyle = '#f5576c';
+            ctx.fillRect(canvas.width - 180, 40, 15, 15);
+            ctx.fillStyle = '#333';
+            ctx.fillText('Sorties', canvas.width - 100, 52);
+            
+            ctx.fillStyle = '#4facfe';
+            ctx.fillRect(canvas.width - 180, 60, 15, 15);
+            ctx.fillStyle = '#333';
+            ctx.fillText('Solde', canvas.width - 100, 72);
+        }
+
+        function renderChartNature() {
+            const canvas = document.getElementById('chartNature');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const natureData = {};
+            filteredData.entrees.forEach(e => {
+                natureData[e.nature] = (natureData[e.nature] || 0) + e.montant;
+            });
+            
+            if (Object.keys(natureData).length === 0) {
+                ctx.font = '16px Segoe UI';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('Aucune donnée', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            const total = Object.values(natureData).reduce((sum, v) => sum + v, 0) || 1;
+            const colors = ['#667eea', '#38ef7d', '#ffc107', '#f5576c'];
+            
+            let startAngle = 0;
+            const centerX = canvas.width / 2 - 100;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+            
+            Object.keys(natureData).forEach((nature, index) => {
+                const value = natureData[nature];
+                const sliceAngle = (value / total) * Math.PI * 2;
+                
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.fillStyle = colors[index % colors.length];
+                ctx.fillRect(canvas.width - 220, 20 + (index * 30), 15, 15);
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Segoe UI';
+                ctx.textAlign = 'left';
+                ctx.fillText(`${nature}: ${formatCurrency(value)} (${(value / total * 100).toFixed(1)}%)`, canvas.width - 200, 32 + (index * 30));
+                
+                startAngle += sliceAngle;
+            });
+        }
+
+        function renderChartMargeDime() {
+            const canvas = document.getElementById('chartMargeDime');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const dailyMarge = {};
+            filteredData.entrees.forEach(e => {
+                if (!dailyMarge[e.date]) {
+                    dailyMarge[e.date] = { marge: 0 };
+                }
+                dailyMarge[e.date].marge += e.marge;
+            });
+            
+            if (Object.keys(dailyMarge).sort().length === 0) {
+                ctx.font = '16px Segoe UI';
+                ctx.fillStyle = '#999';
+                ctx.textAlign = 'center';
+                ctx.fillText('Aucune donnée', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            const dataPoints = Object.keys(dailyMarge).sort().map(date => ({
+                date: date,
+                marge: dailyMarge[date].marge,
+                dime: dailyMarge[date].marge * 0.1
+            }));
+            
+            const maxValue = Math.max(...dataPoints.map(d => d.marge)) || 1;
+            const chartHeight = canvas.height - 100;
+            const chartWidth = canvas.width - 100;
+            
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(50, 50);
+            ctx.lineTo(50, canvas.height - 50);
+            ctx.lineTo(canvas.width - 50, canvas.height - 50);
+            ctx.stroke();
+            
+            dataPoints.forEach((point, index) => {
+                const x = 50 + (index * chartWidth / (dataPoints.length - 1 || 1));
+                const margeY = canvas.height - 50 - ((point.marge / maxValue) * chartHeight);
+                const dimeY = canvas.height - 50 - ((point.dime / maxValue) * chartHeight);
+                
+                ctx.fillStyle = '#fa709a';
+                ctx.beginPath();
+                ctx.arc(x, margeY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (index > 0) {
+                    const prevX = 50 + ((index - 1) * chartWidth / (dataPoints.length - 1));
+                    const prevMargeY = canvas.height - 50 - ((dataPoints[index - 1].marge / maxValue) * chartHeight);
+                    
+                    ctx.strokeStyle = '#fa709a';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevMargeY);
+                    ctx.lineTo(x, margeY);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#fee140';
+                ctx.beginPath();
+                ctx.arc(x, dimeY, 4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (index > 0) {
+                    const prevX = 50 + ((index - 1) * chartWidth / (dataPoints.length - 1));
+                    const prevDimeY = canvas.height - 50 - ((dataPoints[index - 1].dime / maxValue) * chartHeight);
+                    
+                    ctx.strokeStyle = '#fee140';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX, prevDimeY);
+                    ctx.lineTo(x, dimeY);
+                    ctx.stroke();
+                }
+                
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(point.date.slice(5), x, canvas.height - 30);
+            });
+            
+            ctx.font = '12px Segoe UI';
+            ctx.fillStyle = '#fa709a';
+            ctx.fillRect(canvas.width - 150, 20, 15, 15);
+            ctx.fillStyle = '#333';
+            ctx.fillText('Marge', canvas.width - 100, 32);
+            
+            ctx.fillStyle = '#fee140';
+            ctx.fillRect(canvas.width - 150, 40, 15, 15);
+            ctx.fillStyle = '#333';
+            ctx.fillText('Dîme (10%)', canvas.width - 100, 52);
+        }
+
+        function backupData() {
+            if (!ensureAuth()) return;
+            
+            const backup = {
+                entries: getEntrees(),
+                exits: getSorties(),
+                users: getUsers(),
+                seq: getSeq(),
+                budgets: getBudgets(),
+                depenses: getDepenses(),
+                clotures: getClotures(),
+                audit: JSON.parse(localStorage.getItem('ec_audit') || '[]'),
+                version: CONFIG.VERSION,
+                exportDate: new Date().toISOString()
+            };
+            
+            const json = JSON.stringify(backup, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_psi_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            logAudit('BACKUP', 'Data backed up');
+            showToast('Sauvegarde créée', 'success');
+        }
+
+        function restoreData() {
+            if (!ensureAuth() || currentUser.role !== 'admin') {
+                showToast('Seul un admin peut restaurer', 'error');
+                return;
+            }
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    const backup = JSON.parse(text);
+                    
+                    if (!backup.entries || !backup.exits) {
+                        throw new Error('Format invalide');
+                    }
+                    
+                    if (confirm('Restaurer ces données ? Cela écrasera les données actuelles.')) {
+                        saveEntrees(backup.entries);
+                        saveSorties(backup.exits);
+                        if (backup.users) saveUsers(backup.users);
+                        if (backup.seq) saveSeq(backup.seq);
+                        if (backup.budgets) saveBudgets(backup.budgets);
+                        if (backup.depenses) saveDepenses(backup.depenses);
+                        if (backup.clotures) saveClotures(backup.clotures);
+                        
+                        logAudit('RESTORE', 'Data restored from backup');
+                        showToast('Données restaurées', 'success');
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    }
+                } catch (error) {
+                    showToast('Erreur de restauration: ' + error.message, 'error');
+                }
+            };
+            
+            input.click();
+        }
+
+        function exportCSV(type) {
+            if (!ensureAuth() || !hasPermission('dashboard')) return;
+            
+            let data, headers, filename;
+            
+            if (type === 'entrees') {
+                data = filteredData.entrees.map(e => ({
+                    Date: e.date,
+                    Reference: e.ref,
+                    Nom: e.nom,
+                    Prenoms: e.prenoms,
+                    Nature: e.nature,
+                    Montant: e.montant,
+                    Mode: e.modePaiement,
+                    Tiers: e.tiersNom || '',
+                    Montant_Tiers: e.montantVerseTiers,
+                    Marge: e.marge
+                }));
+                headers = ['Date', 'Reference', 'Nom', 'Prenoms', 'Nature', 'Montant', 'Mode', 'Tiers', 'Montant_Tiers', 'Marge'];
+                filename = 'entrees.csv';
+            } else if (type === 'sorties') {
+                data = filteredData.sorties.map(s => ({
+                    Date: s.date,
+                    Reference: s.ref,
+                    Nature: s.nature,
+                    Fournisseur: s.fournisseur,
+                    Montant: s.montant
+                }));
+                headers = ['Date', 'Reference', 'Nature', 'Fournisseur', 'Montant'];
+                filename = 'sorties.csv';
+            } else if (type === 'depenses') {
+                const periode = document.getElementById('filterDepenseMois').value;
+                data = getDepenses().filter(d => d.periode === periode).map(d => ({
+                    Periode: d.periode,
+                    Date: d.date,
+                    Nature: d.nature,
+                    Montant: d.montant,
+                    Beneficiaire: d.beneficiaire,
+                    Date_Paiement: d.datePaiement || '',
+                    Mode_Paiement: d.modePaiement,
+                    Statut: d.statut,
+                    Observations: d.observations || ''
+                }));
+                headers = ['Periode', 'Date', 'Nature', 'Montant', 'Beneficiaire', 'Date_Paiement', 'Mode_Paiement', 'Statut', 'Observations'];
+                filename = `depenses_${periode}.csv`;
+            }
+            
+            if (data.length === 0) {
+                showToast('Aucune donnée à exporter', 'warning');
+                return;
+            }
+            
+            let csv = headers.join(';') + '\n';
+            
+            data.forEach(row => {
+                csv += headers.map(header => {
+                    let value = row[header];
+                    if (typeof value === 'string' && value.includes(';')) {
+                        value = `"${value}"`;
+                    }
+                    return value;
+                }).join(';') + '\n';
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            logAudit('EXPORT', `Exported ${type}`);
+            showToast('Export terminé', 'success');
+        }
+
+        function resetDemo() {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+            
+            if (confirm('ATTENTION: Réinitialiser toutes les données ?')) {
+                localStorage.clear();
+                showToast('Données réinitialisées', 'warning');
+                setTimeout(() => location.reload(), 1500);
+            }
+        }
+
+        function getMoisSuivant(periode) {
+            const [year, month] = periode.split('-').map(Number);
+            const nextMonth = month === 12 ? 1 : month + 1;
+            const nextYear = month === 12 ? year + 1 : year;
+            return `${nextYear}-${String(nextMonth).padStart(2, '0')}`;
+        }
+
+        function getMoisPrecedent(periode) {
+            const [year, month] = periode.split('-').map(Number);
+            const prevMonth = month === 1 ? 12 : month - 1;
+            const prevYear = month === 1 ? year - 1 : year;
+            return `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+        }
+
+        function isMoisCloture(periode) {
+            const clotures = getClotures();
+            return clotures.some(c => c.periode === periode);
+        }
+
+        function getReportMoisPrecedent(periode) {
+            const clotures = getClotures();
+            const moisPrecedent = getMoisPrecedent(periode);
+            const cloture = clotures.find(c => c.periode === moisPrecedent);
+            return cloture ? cloture.soldeFinal : 0;
+        }
+
+        function updateBudgetTotal() {
+            const banque = parseFloat(document.getElementById('budgetBanqueInput').value) || 0;
+            const caisse = calculateCurrentCaisse();
+            const total = caisse + banque;
+            
+            document.getElementById('budgetCaissePreview').textContent = formatCurrency(caisse);
+            document.getElementById('budgetBanquePreview').textContent = formatCurrency(banque);
+            document.getElementById('budgetTotalPreview').textContent = formatCurrency(total);
+        }
+
+        function calculateCurrentCaisse() {
+            const entrees = getEntrees();
+            const sorties = getSorties();
+            const totalEntrees = entrees.reduce((sum, e) => sum + e.montant, 0);
+            const totalSorties = sorties.reduce((sum, s) => sum + s.montant, 0);
+            return totalEntrees - totalSorties;
+        }
+
+        function loadCurrentMonthBudget() {
+            const today = new Date();
+            const currentMonth = formatDate(new Date(today.getFullYear(), today.getMonth(), 1)).slice(0, 7);
+            
+            document.getElementById('budgetMois').value = currentMonth;
+            document.getElementById('filterDepenseMois').value = currentMonth;
+            
+            const budgets = getBudgets();
+            const budget = budgets.find(b => b.periode === currentMonth);
+            
+            if (budget) {
+                document.getElementById('budgetBanqueInput').value = budget.banque;
+            } else {
+                document.getElementById('budgetBanqueInput').value = 0;
+            }
+            
+            updateBudgetTotal();
+            updateBudgetSummary();
+            filterDepenses();
+            renderHistoireClotures();
+        }
+
+        function saveBudgetConfig(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || currentUser.role !== 'admin') {
+                showToast('Accès réservé aux administrateurs', 'error');
+                return;
+            }
+            
+            const periode = document.getElementById('budgetMois').value;
+            const banque = parseFloat(document.getElementById('budgetBanqueInput').value) || 0;
+            const caisse = calculateCurrentCaisse();
+            
+            if (!periode) {
+                showToast('Veuillez sélectionner un mois', 'error');
+                return;
+            }
+            
+            const budgets = getBudgets();
+            const existingIndex = budgets.findIndex(b => b.periode === periode);
+            
+            const budget = {
+                periode: periode,
+                caisse: caisse,
+                banque: banque,
+                total: caisse + banque,
+                createdAt: existingIndex >= 0 ? budgets[existingIndex].createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (existingIndex >= 0) {
+                budgets[existingIndex] = budget;
+                showToast('Trésorerie mise à jour', 'success');
+            } else {
+                budgets.push(budget);
+                showToast('Trésorerie créée', 'success');
+            }
+            
+            saveBudgets(budgets);
+            logAudit('SAVE_TRESORERIE', `Trésorerie for ${periode} saved`);
+            updateBudgetSummary();
+        }
+
+        function updateBudgetSummary() {
+            const periode = document.getElementById('filterDepenseMois').value;
+            if (!periode) return;
+
+            const estCloture = isMoisCloture(periode);
+            
+            document.getElementById('actionCloture').style.display = estCloture ? 'none' : 'block';
+            document.getElementById('moisCloture').style.display = estCloture ? 'block' : 'none';
+            
+            const statutBadge = document.getElementById('statutMois');
+            if (estCloture) {
+                statutBadge.textContent = 'CLÔTURÉ';
+                statutBadge.className = 'badge badge-blocked';
+            } else {
+                statutBadge.textContent = 'OUVERT';
+                statutBadge.className = 'badge badge-active';
+            }
+
+            const formBudget = document.getElementById('formBudget');
+            const formDepense = document.getElementById('formDepense');
+            const inputs = [...formBudget.querySelectorAll('input, button'), ...formDepense.querySelectorAll('input, select, textarea, button')];
+            inputs.forEach(input => {
+                input.disabled = estCloture;
+            });
+
+            const budgets = getBudgets();
+            let budget = budgets.find(b => b.periode === periode);
+            
+            const reportPrecedent = getReportMoisPrecedent(periode);
+            
+            if (reportPrecedent > 0) {
+                document.getElementById('reportMoisPrecedent').style.display = 'block';
+                document.getElementById('montantReport').textContent = formatCurrency(reportPrecedent);
+                const moisPrec = getMoisPrecedent(periode);
+                const [year, month] = moisPrec.split('-');
+                const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                                   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                document.getElementById('periodeReport').textContent = `${monthNames[parseInt(month) - 1]} ${year}`;
+                document.getElementById('avecReport').textContent = '+ Report';
+            } else {
+                document.getElementById('reportMoisPrecedent').style.display = 'none';
+                document.getElementById('avecReport').textContent = '';
+            }
+            
+            if (!budget) {
+                const caisse = calculateCurrentCaisse();
+                budget = {
+                    periode: periode,
+                    caisse: caisse,
+                    banque: 0,
+                    total: caisse + reportPrecedent
+                };
+            } else {
+                budget.caisse = calculateCurrentCaisse();
+                budget.total = budget.caisse + budget.banque + reportPrecedent;
+            }
+            
+            const depenses = getDepenses().filter(d => d.periode === periode && d.statut === 'EXÉCUTÉ');
+            const totalDepenses = depenses.reduce((sum, d) => sum + d.montant, 0);
+            
+            const soldeTresorerie = budget.total - totalDepenses;
+            
+            document.getElementById('tresorerieCaisse').textContent = formatCurrency(budget.caisse);
+            document.getElementById('tresorerieBanque').textContent = formatCurrency(budget.banque);
+            document.getElementById('tresorerieTotal').textContent = formatCurrency(budget.total);
+            document.getElementById('tresorerieDepenses').textContent = formatCurrency(totalDepenses);
+            document.getElementById('tresorerieSolde').textContent = formatCurrency(soldeTresorerie);
+            
+            const soldeElement = document.getElementById('tresorerieSolde');
+            if (soldeTresorerie >= 0) {
+                soldeElement.style.color = 'var(--success)';
+            } else {
+                soldeElement.style.color = 'var(--danger)';
+            }
+            
+            const [year, month] = periode.split('-');
+            const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                               'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+            const monthName = monthNames[parseInt(month) - 1];
+            document.getElementById('depensesMoisActuel').textContent = `${monthName} ${year}`;
+            document.getElementById('depensesListMois').textContent = `${monthName} ${year}`;
+        }
+
+        function saveDepense(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || currentUser.role !== 'admin') {
+                showToast('Accès réservé aux administrateurs', 'error');
+                return;
+            }
+
+            const date = document.getElementById('depenseDate').value;
+            const periode = date.slice(0, 7);
+
+            if (isMoisCloture(periode)) {
+                showToast('Impossible de modifier un mois clôturé', 'error');
+                return;
+            }
+            
+            const id = document.getElementById('depenseId').value || generateUID();
+            const nature = document.getElementById('depenseNature').value;
+            const montant = parseFloat(document.getElementById('depenseMontant').value);
+            const beneficiaire = document.getElementById('depenseBeneficiaire').value.trim();
+            const datePaiement = document.getElementById('depenseDatePaiement').value;
+            const modePaiement = document.getElementById('depenseModePaiement').value;
+            const statut = document.getElementById('depenseStatut').value;
+            const observations = document.getElementById('depenseObservations').value.trim();
+            
+            if (!date || !nature || !montant || !beneficiaire || !modePaiement || !statut) {
+                showToast('Veuillez remplir tous les champs obligatoires', 'error');
+                return;
+            }
+            
+            const depenses = getDepenses();
+            const isUpdate = depenses.some(d => d.id === id);
+            
+            if (isUpdate) {
+                const oldDepense = depenses.find(d => d.id === id);
+                if (oldDepense.periode !== periode && isMoisCloture(periode)) {
+                    showToast('Impossible de déplacer vers un mois clôturé', 'error');
+                    return;
+                }
+            }
+            
+            const depense = {
+                id: id,
+                periode: periode,
+                date: date,
+                nature: nature,
+                montant: montant,
+                beneficiaire: beneficiaire,
+                datePaiement: datePaiement || null,
+                modePaiement: modePaiement,
+                statut: statut,
+                observations: observations,
+                createdAt: isUpdate ? depenses.find(d => d.id === id).createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (isUpdate) {
+                const index = depenses.findIndex(d => d.id === id);
+                depenses[index] = depense;
+                logAudit('UPDATE_DEPENSE', `Dépense ${nature} updated`);
+                showToast('Dépense modifiée', 'success');
+            } else {
+                depenses.push(depense);
+                logAudit('ADD_DEPENSE', `Dépense ${nature} added`);
+                showToast('Dépense ajoutée', 'success');
+            }
+            
+            saveDepenses(depenses);
+            cancelDepense();
+            filterDepenses();
+            updateBudgetSummary();
+        }
+
+        function editDepense(id) {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+            
+            const depense = getDepenses().find(d => d.id === id);
+            if (!depense) return;
+            
+            document.getElementById('depenseId').value = depense.id;
+            document.getElementById('depenseDate').value = depense.date;
+            document.getElementById('depenseNature').value = depense.nature;
+            document.getElementById('depenseMontant').value = depense.montant;
+            document.getElementById('depenseBeneficiaire').value = depense.beneficiaire;
+            document.getElementById('depenseDatePaiement').value = depense.datePaiement || '';
+            document.getElementById('depenseModePaiement').value = depense.modePaiement;
+            document.getElementById('depenseStatut').value = depense.statut;
+            document.getElementById('depenseObservations').value = depense.observations || '';
+            
+            document.getElementById('btnSaveDepense').textContent = 'Modifier';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelDepense() {
+            document.getElementById('formDepense').reset();
+            document.getElementById('depenseId').value = '';
+            document.getElementById('btnSaveDepense').textContent = 'Ajouter';
+        }
+
+        function deleteDepense(id) {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+            
+            let depenses = getDepenses();
+            const depense = depenses.find(d => d.id === id);
+
+            if (isMoisCloture(depense.periode)) {
+                showToast('Impossible de supprimer une dépense d\'un mois clôturé', 'error');
+                return;
+            }
+            
+            if (!confirm('Supprimer cette dépense ?')) return;
+            
+            depenses = depenses.filter(d => d.id !== id);
+            saveDepenses(depenses);
+            
+            logAudit('DELETE_DEPENSE', `Dépense ${depense.nature} deleted`);
+            showToast('Dépense supprimée', 'success');
+            
+            filterDepenses();
+            updateBudgetSummary();
+        }
+
+        function filterDepenses() {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+            
+            const periode = document.getElementById('filterDepenseMois').value;
+            const nature = document.getElementById('filterDepenseNature').value;
+            const statut = document.getElementById('filterDepenseStatut').value;
+            
+            if (!periode) {
+                loadCurrentMonthBudget();
+                return;
+            }
+            
+            const allDepenses = getDepenses();
+            const filtered = allDepenses.filter(d => {
+                const periodeMatch = d.periode === periode;
+                const natureMatch = !nature || d.nature === nature;
+                const statutMatch = !statut || d.statut === statut;
+                
+                return periodeMatch && natureMatch && statutMatch;
+            });
+            
+            updateBudgetSummary();
+            renderDepensesTable(filtered, 1);
+        }
+
+        function resetDepenseFilters() {
+            document.getElementById('filterDepenseNature').value = '';
+            document.getElementById('filterDepenseStatut').value = '';
+            loadCurrentMonthBudget();
+        }
+
+        function renderDepensesTable(depenses, page = 1) {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+            
+            currentPageDepenses = page;
+            
+            const tableDiv = document.getElementById('depensesTable');
+            const paginationDiv = document.getElementById('depensesPagination');
+            
+            if (depenses.length === 0) {
+                tableDiv.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Aucune dépense pour cette période</div>';
+                paginationDiv.innerHTML = '';
+                return;
+            }
+            
+            const totalPages = Math.ceil(depenses.length / CONFIG.PAGE_SIZE);
+            const startIndex = (page - 1) * CONFIG.PAGE_SIZE;
+            const pageDepenses = depenses.slice(startIndex, startIndex + CONFIG.PAGE_SIZE);
+            
+            let html = `
+                <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Période</th>
+                            <th>Date</th>
+                            <th>Nature</th>
+                            <th>Montant</th>
+                            <th>Bénéficiaire</th>
+                            <th>Date Paiement</th>
+                            <th>Mode</th>
+                            <th>Statut</th>
+                            <th>Observations</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            pageDepenses.forEach(depense => {
+                const statutClass = depense.statut === 'EXÉCUTÉ' ? 'badge-active' : 'badge-blocked';
+                const [year, month] = depense.periode.split('-');
+                const periodeText = `${month}/${year}`;
+                const estCloture = isMoisCloture(depense.periode);
+                
+                html += `
+                    <tr style="${estCloture ? 'opacity: 0.7; background: var(--bg-main);' : ''}">
+                        <td>${periodeText} ${estCloture ? '<span class="badge badge-blocked" style="font-size: 10px;">CLÔTURÉ</span>' : ''}</td>
+                        <td>${depense.date}</td>
+                        <td>${escapeHtml(depense.nature)}</td>
+                        <td style="font-weight: bold;">${formatCurrency(depense.montant)}</td>
+                        <td>${escapeHtml(depense.beneficiaire)}</td>
+                        <td>${depense.datePaiement || '-'}</td>
+                        <td><span class="badge badge-info">${escapeHtml(depense.modePaiement)}</span></td>
+                        <td><span class="badge ${statutClass}">${escapeHtml(depense.statut)}</span></td>
+                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(depense.observations || '')}">${escapeHtml(depense.observations || '-')}</td>
+                        <td class="action-btns">
+                            <button class="btn btn-warning" onclick="editDepense('${depense.id}')" ${estCloture ? 'disabled' : ''}>✏️</button>
+                            <button class="btn btn-danger" onclick="deleteDepense('${depense.id}')" ${estCloture ? 'disabled' : ''}>🗑️</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table></div>';
+            tableDiv.innerHTML = html;
+            
+            const filteredDepenses = getDepenses().filter(d => d.periode === document.getElementById('filterDepenseMois').value);
+            paginationDiv.innerHTML = `
+                <button onclick="renderDepensesTable(${JSON.stringify(filteredDepenses).replace(/'/g, "\\'")}, ${page - 1})" ${page === 1 ? 'disabled' : ''}>
+                    ‹ Précédent
+                </button>
+                <span>Page ${page} / ${totalPages}</span>
+                <button onclick="renderDepensesTable(${JSON.stringify(filteredDepenses).replace(/'/g, "\\'")}, ${page + 1})" ${page === totalPages ? 'disabled' : ''}>
+                    Suivant ›
+                </button>
+            `;
+        }
+
+        function cloturerMois() {
+            if (!ensureAuth() || currentUser.role !== 'admin') {
+                showToast('Accès réservé aux administrateurs', 'error');
+                return;
+            }
+
+            const periode = document.getElementById('filterDepenseMois').value;
+            if (!periode) {
+                showToast('Aucun mois sélectionné', 'error');
+                return;
+            }
+
+            if (isMoisCloture(periode)) {
+                showToast('Ce mois est déjà clôturé', 'warning');
+                return;
+            }
+
+            const budgets = getBudgets();
+            const budget = budgets.find(b => b.periode === periode);
+            
+            if (!budget) {
+                showToast('Veuillez d\'abord configurer la trésorerie de ce mois', 'error');
+                return;
+            }
+
+            const soldeFinal = parseFloat(document.getElementById('tresorerieSolde').textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+            const caisse = parseFloat(document.getElementById('tresorerieCaisse').textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+            const banque = parseFloat(document.getElementById('tresorerieBanque').textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+            const totalDepenses = parseFloat(document.getElementById('tresorerieDepenses').textContent.replace(/[^0-9,-]/g, '').replace(',', '.')) || 0;
+
+            const confirmMessage = `Voulez-vous vraiment clôturer le mois ${periode} ?\n\nSolde final : ${formatCurrency(soldeFinal)}\n\nCe solde sera automatiquement reporté sur le mois suivant.\nLes modifications ne seront plus possibles.`;
+
+            if (!confirm(confirmMessage)) return;
+
+            const clotures = getClotures();
+            const cloture = {
+                periode: periode,
+                soldeFinal: soldeFinal,
+                caisse: caisse,
+                banque: banque,
+                totalDepenses: totalDepenses,
+                reportInitial: getReportMoisPrecedent(periode),
+                dateCloture: new Date().toISOString(),
+                cloturePar: currentUser.username
+            };
+
+            clotures.push(cloture);
+            saveClotures(clotures);
+
+            const moisSuivant = getMoisSuivant(periode);
+            const budgetsSuivant = getBudgets();
+            
+            if (!budgetsSuivant.some(b => b.periode === moisSuivant)) {
+                const nouveauBudget = {
+                    periode: moisSuivant,
+                    caisse: 0,
+                    banque: soldeFinal,
+                    total: soldeFinal,
+                    reportPrecedent: soldeFinal,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                budgetsSuivant.push(nouveauBudget);
+                saveBudgets(budgetsSuivant);
+            }
+
+            logAudit('CLOTURE_MOIS', `Mois ${periode} clôturé avec solde ${soldeFinal}`);
+            showToast('Mois clôturé avec succès ! Le solde a été reporté.', 'success');
+
+            document.getElementById('filterDepenseMois').value = moisSuivant;
+            document.getElementById('budgetMois').value = moisSuivant;
+            loadCurrentMonthBudget();
+            renderHistoireClotures();
+        }
+
+        function renderHistoireClotures() {
+            if (!ensureAuth() || currentUser.role !== 'admin') return;
+
+            const clotures = getClotures().sort((a, b) => b.periode.localeCompare(a.periode));
+            const container = document.getElementById('histoireClotures');
+
+            if (clotures.length === 0) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Aucune clôture enregistrée</div>';
+                return;
+            }
+
+            let html = `
+                <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Période</th>
+                            <th>Report Initial</th>
+                            <th>Caisse</th>
+                            <th>Banque</th>
+                            <th>Total Trésorerie</th>
+                            <th>Dépenses</th>
+                            <th>Solde Final</th>
+                            <th>Date Clôture</th>
+                            <th>Clôturé par</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            clotures.forEach(cloture => {
+                const [year, month] = cloture.periode.split('-');
+                const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                                   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+                const periodeText = `${monthNames[parseInt(month) - 1]} ${year}`;
+                const dateCloture = new Date(cloture.dateCloture).toLocaleDateString('fr-FR');
+                const totalTresorerie = cloture.caisse + cloture.banque + (cloture.reportInitial || 0);
+
+                html += `
+                    <tr>
+                        <td style="font-weight: bold;">${periodeText}</td>
+                        <td>${formatCurrency(cloture.reportInitial || 0)}</td>
+                        <td>${formatCurrency(cloture.caisse)}</td>
+                        <td>${formatCurrency(cloture.banque)}</td>
+                        <td style="font-weight: bold;">${formatCurrency(totalTresorerie)}</td>
+                        <td style="color: var(--danger);">${formatCurrency(cloture.totalDepenses)}</td>
+                        <td style="font-weight: bold; color: ${cloture.soldeFinal >= 0 ? 'var(--success)' : 'var(--danger)'}">${formatCurrency(cloture.soldeFinal)}</td>
+                        <td>${dateCloture}</td>
+                        <td>${escapeHtml(cloture.cloturePar)}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        }
+
+        function renderUsersTable() {
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            const users = getUsers();
+            const tableDiv = document.getElementById('usersTable');
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Utilisateur</th>
+                            <th>Rôle</th>
+                            <th>Statut</th>
+                            <th>Permissions</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            users.forEach(user => {
+                const roleBadge = user.role === 'admin' 
+                    ? '<span class="badge badge-admin">Admin</span>' 
+                    : '<span class="badge badge-agent">Agent</span>';
+                
+                const statusBadge = user.active 
+                    ? '<span class="badge badge-active">Actif</span>' 
+                    : '<span class="badge badge-blocked">Bloqué</span>';
+                
+                const permsText = user.permissions ? user.permissions.join(', ') : 'Aucune';
+                const isCurrentUser = user.username === currentUser.username;
+                
+                html += `
+                    <tr>
+                        <td><strong>${escapeHtml(user.username)}</strong> ${isCurrentUser ? '<span class="badge" style="background: var(--primary); color: white; margin-left: 8px;">(Vous)</span>' : ''}</td>
+                        <td>${roleBadge}</td>
+                        <td>${statusBadge}</td>
+                        <td style="font-size: 0.9em;">${escapeHtml(permsText)}</td>
+                        <td class="action-btns" style="display: flex; gap: 5px;">
+                            <button class="btn btn-warning" onclick="editUser('${user.id}')" title="Modifier les accès" ${isCurrentUser ? 'disabled' : ''}>
+                                ✏️
+                            </button>
+                            <button class="btn ${user.active ? 'btn-danger' : 'btn-success'}" onclick="toggleUserBlock('${user.id}')" title="${user.active ? 'Bloquer' : 'Débloquer'}" ${isCurrentUser ? 'disabled' : ''}>
+                                ${user.active ? '🔒' : '🔓'}
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteUser('${user.id}')" title="Supprimer" ${isCurrentUser || (user.username === 'admin' && user.id !== currentUser.id) ? 'disabled' : ''}>
+                                🗑️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+        }
+
+        function editUser(userId) {
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            const user = getUsers().find(u => u.id === userId);
+            if (!user) return;
+            
+            document.getElementById('modalUserId').value = user.id;
+            document.getElementById('modalUserUsername').value = user.username;
+            document.getElementById('modalUserRole').value = user.role;
+            document.getElementById('modalUserActive').checked = user.active;
+            document.getElementById('modalUserTitle').textContent = `Modifier - ${user.username}`;
+            
+            document.getElementById('modalUser').classList.add('active');
+        }
+
+        function closeUserModal() {
+            document.getElementById('modalUser').classList.remove('active');
+            document.getElementById('formUser').reset();
+        }
+
+        function saveUser(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            const userId = document.getElementById('modalUserId').value;
+            const role = document.getElementById('modalUserRole').value;
+            const active = document.getElementById('modalUserActive').checked;
+            
+            let users = getUsers();
+            const userIndex = users.findIndex(u => u.id === userId);
+            
+            if (userIndex === -1) return;
+            
+            const user = users[userIndex];
+            
+            if (user.username === currentUser.username && !active) {
+                showToast('Vous ne pouvez pas désactiver votre propre compte', 'error');
+                return;
+            }
+            
+            user.role = role;
+            user.active = active;
+            user.permissions = role === 'admin' 
+                ? ['dashboard', 'entries', 'exits', 'settings', 'depenses'] 
+                : ['entries', 'exits'];
+            
+            users[userIndex] = user;
+            saveUsers(users);
+            
+            logAudit('UPDATE_USER', `User ${user.username} role changed to ${role}`);
+            renderUsersTable();
+            closeUserModal();
+            showToast('Utilisateur mis à jour', 'success');
+        }
+
+        function toggleUserBlock(userId) {
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            let users = getUsers();
+            const user = users.find(u => u.id === userId);
+            
+            if (!user) return;
+            
+            if (user.username === currentUser.username) {
+                showToast('Vous ne pouvez pas modifier votre propre statut', 'error');
+                return;
+            }
+            
+            const action = user.active ? 'bloquer' : 'débloquer';
+            if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${user.username} ?`)) return;
+            
+            user.active = !user.active;
+            saveUsers(users);
+            
+            logAudit('TOGGLE_USER_BLOCK', `User ${user.username} ${user.active ? 'unblocked' : 'blocked'}`);
+            showToast(`Utilisateur ${action}é`, 'success');
+            renderUsersTable();
+        }
+
+        function deleteUser(userId) {
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            let users = getUsers();
+            const user = users.find(u => u.id === userId);
+            
+            if (!user) return;
+            
+            if (user.username === currentUser.username) {
+                showToast('Vous ne pouvez pas supprimer votre propre compte', 'error');
+                return;
+            }
+            
+            if (user.username === 'admin' && user.id !== currentUser.id) {
+                showToast('Impossible de supprimer le compte admin initial', 'error');
+                return;
+            }
+            
+            if (!confirm(`Supprimer définitivement ${user.username} ?`)) return;
+            
+            users = users.filter(u => u.id !== userId);
+            saveUsers(users);
+            
+            logAudit('DELETE_USER', `User ${user.username} deleted`);
+            showToast('Utilisateur supprimé', 'success');
+            renderUsersTable();
+        }
+
+        async function createNewUser(event) {
+            event.preventDefault();
+            
+            if (!ensureAuth() || !hasPermission('settings')) return;
+            
+            const username = document.getElementById('newUserUsername').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const role = document.getElementById('newUserRole').value;
+            
+            if (!username || !password || !role) {
+                showToast('Veuillez remplir tous les champs', 'error');
+                return;
+            }
+            
+            if (password.length < 8) {
+                showToast('Le mot de passe doit contenir au moins 8 caractères', 'error');
+                return;
+            }
+            
+            const users = getUsers();
+            
+            if (users.some(u => u.username === username)) {
+                showToast('Cet utilisateur existe déjà', 'error');
+                return;
+            }
+            
+            const permissions = [];
+            if (role === 'admin') {
+                permissions.push('dashboard', 'entries', 'exits', 'settings', 'depenses');
+            } else {
+                if (document.getElementById('permDashboard').checked) permissions.push('dashboard');
+                if (document.getElementById('permEntries').checked) permissions.push('entries');
+                if (document.getElementById('permExits').checked) permissions.push('exits');
+                if (document.getElementById('permSettings').checked) permissions.push('settings');
+                if (document.getElementById('permDepenses').checked) permissions.push('depenses');
+            }
+            
+            if (permissions.length === 0 && role === 'agent') {
+                showToast('Sélectionnez au least une permission', 'error');
+                return;
+            }
+            
+            const passwordHash = await hashPasswordPBKDF2(password);
+            
+            const newUser = {
+                id: generateUID(),
+                username: username,
+                passwordHash: passwordHash,
+                role: role,
+                permissions: permissions,
+                active: true,
+                createdAt: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            saveUsers(users);
+            
+            logAudit('CREATE_USER', `New user ${username} created with role ${role}`);
+            showToast(`Utilisateur ${username} créé avec succès`, 'success');
+            resetNewUserForm();
+            renderUsersTable();
+        }
+
+        function resetNewUserForm() {
+            document.getElementById('formNewUser').reset();
+            document.getElementById('permDashboard').checked = false;
+            document.getElementById('permEntries').checked = false;
+            document.getElementById('permExits').checked = false;
+            document.getElementById('permSettings').checked = false;
+            document.getElementById('permDepenses').checked = false;
+        }
+
+        async function initApp() {
+            await initStorage();
+            loadTheme();
+            
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            
+            document.getElementById('filterDateDebut').value = formatDate(firstDay);
+            document.getElementById('filterDateFin').value = formatDate(today);
+            document.getElementById('entreeDate').value = formatDate(today);
+            document.getElementById('sortieDate').value = formatDate(today);
+            document.getElementById('depenseDate').value = formatDate(today);
+            document.getElementById('budgetMois').value = formatDate(firstDay).slice(0, 7);
+            document.getElementById('filterDepenseMois').value = formatDate(firstDay).slice(0, 7);
+            
+            document.getElementById('loginPage').classList.add('active');
+            document.getElementById('mainApp').classList.remove('active');
+            
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+            document.getElementById('formEntree').addEventListener('submit', saveEntree);
+            document.getElementById('formSortie').addEventListener('submit', saveSortie);
+            document.getElementById('formUser').addEventListener('submit', saveUser);
+            document.getElementById('formBudget').addEventListener('submit', saveBudgetConfig);
+            document.getElementById('formDepense').addEventListener('submit', saveDepense);
+            document.getElementById('formNewUser').addEventListener('submit', createNewUser);
+        }
+
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

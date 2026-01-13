@@ -13,4 +13,7 @@
 <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 <link rel="stylesheet" href="{{ asset('dist/css/theme-image.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/select2/dist/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/tinymce/js/tinymce/skins/content/default/content.min.css') }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@17.0.0/build/css/intlTelInput.css">
+
 <script src="{{ asset('src/js/vendor/modernizr-2.8.3.min.js') }}"></script>

@@ -56,7 +56,7 @@
       isFirstItemUndeletable: true
     });
     $('.html-editor').summernote({
-      height: 300,
+      height: 750,
       tabsize: 2
     });
   });

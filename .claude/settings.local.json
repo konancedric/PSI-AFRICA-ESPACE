@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan migrate:*)",
+      "Bash(php artisan migrate:status:*)",
+      "Bash(composer require:*)",
+      "Bash(composer remove:*)",
+      "Bash(dir /s /b \"c:\\\\xampp\\\\htdocs\\\\ESPACE\\\\resources\\\\views\\\\admin\\\\profil-visa\\\\*.blade.php\")"
+    ]
+  }
+}

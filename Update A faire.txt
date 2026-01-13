@@ -1,4 +1,0 @@
-Valider le rdv (ce qui veut dire que la personne en charge du rdv est présent)
-La validation donne lieu à l'envois du sms et du web service)
-
-https://evoting.com/en/?lang=en

@@ -13,5 +13,8 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         //
+        //'/villes/add-historique'
+        'signature/*',  // Routes publiques de signature de contrat
+        'facturation/*', // Routes publiques de facturation
     ];
 }

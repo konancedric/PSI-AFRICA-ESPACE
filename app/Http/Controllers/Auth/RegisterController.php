@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\ProfilVisa;
 use App\Http\Requests\UserRequest;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\RegistersUsers;
@@ -58,10 +59,26 @@ class RegisterController extends Controller
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'confirmed'],
-        ]);
+            'prenom' => ['required', 'string', 'max:255'],
+            'nom' => ['required', 'string', 'max:255'],
+            'contact' => ['nullable', 'string', 'max:20', 'unique:users,contact', 'regex:/^\+?[1-9]\d{1,14}$/'],
+            'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'prenom.required' => 'Le prénom est obligatoire',
+            'nom.required' => 'Le nom est obligatoire',
+            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères',
+            'password.confirmed' => 'Les mots de passe ne correspondent pas',
+            'email.unique' => 'Cet email est déjà utilisé',
+            'contact.unique' => 'Ce numéro est déjà utilisé',
+            'contact.regex' => 'Le format du numéro de téléphone est invalide. Utilisez le format international (ex: +225XXXXXXXXXX)',
+        ])->after(function ($validator) {
+            // Au moins email OU contact doit être renseigné
+            if (empty(request('email')) && empty(request('contact'))) {
+                $validator->errors()->add('email', 'Vous devez fournir au moins un email ou un numéro de téléphone');
+                $validator->errors()->add('contact', 'Vous devez fournir au moins un email ou un numéro de téléphone');
+            }
+        });
     }
 
     /**
@@ -72,11 +89,33 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+        // Créer l'utilisateur
+        $user = User::create([
+            'name' => $data['prenom'] . ' ' . $data['nom'], // Concaténation prénom + nom
+            'email' => $data['email'] ?? null,
+            'contact' => $data['contact'] ?? null,
             'password' => Hash::make($data['password']),
+            'type_user' => 'public', // Par défaut pour les clients
+            'ent1d' => 1, // Entreprise par défaut
+            'etat' => 1, // Actif par défaut
         ]);
+
+        // Créer automatiquement un profil visa pour le nouvel inscrit
+        $numeroProfilVisa = 'PV-' . date('Y') . '-' . str_pad($user->id, 6, '0', STR_PAD_LEFT);
+
+        ProfilVisa::create([
+            'user1d' => $user->id,
+            'ent1d' => 1,
+            'numero_profil_visa' => $numeroProfilVisa,
+            'type_profil_visa' => null, // null = Profil en attente de définition par le client
+            'etape' => 1,
+            'etat' => 1,
+            'id_statuts_etat' => 1, // Statut par défaut: En attente
+            'message' => 'Profil créé automatiquement lors de l\'inscription',
+            'log_ip' => request()->ip(),
+        ]);
+
+        return $user;
     }
 
     public function storeregisterpro(Request $request): RedirectResponse
@@ -108,6 +147,8 @@ class RegisterController extends Controller
                     'contact' => 'required',
                     'username' => 'required',
                     'logo_ent' => 'required',
+                    'id_ville' => 'required',
+                    'id_souscategorie' => 'required',
                 ]);
                 if ($validator->fails())
                 {
@@ -146,6 +187,8 @@ class RegisterController extends Controller
                     $Entreprises->emailent =  $request->emailent;
                     $Entreprises->username =  $request->username;
                     $Entreprises->adresse =  $request->adresse;
+                    $Entreprises->id_ville =  $request->id_ville;
+                    $Entreprises->id_souscategorie =  $request->id_souscategorie;
                     $Entreprises->user1d =  $user1d;
                     $Entreprises->logo_ent =  $logoEnt;
                     $Entreprises->save();

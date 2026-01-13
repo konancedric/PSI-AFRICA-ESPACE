@@ -1,7 +1,7 @@
 <!doctype html>
 <html class="no-js" lang="fr">
     <head> 
-        <title>Système de Gestion Integré des votes | {{ config('app.name') }}</title>
+        <title>Système de Gestion Integré| {{ config('app.name') }}</title>
         <meta name="description" content="">
         <meta name="keywords" content="">
         @include('layouts.layouts-css')

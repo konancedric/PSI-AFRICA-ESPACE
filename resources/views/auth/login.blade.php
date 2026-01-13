@@ -25,25 +25,63 @@
                                 <a href="/"><img width="150" src="{{ asset('img/logo.png') }}" alt=""></a>
                             </div>
                             <p>Se Connecter à son espace - {{ config('app.name') }}</p>
-                             <form method="POST" action="{{ route('login') }}">
+
+                            @if(session('info'))
+                                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-info-circle"></i> {{ session('info') }}
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
+                            @if(request()->has('redirect') && request('redirect') == 'profil-visa/create')
+                                <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                    <i class="fa fa-passport"></i>
+                                    <strong>Demande de profil visa</strong><br>
+                                    Connectez-vous pour soumettre votre demande de profil visa.
+                                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                            @endif
+
+                            <form method="POST" action="{{ route('login') }}">
                                 @csrf
                                 <div class="form-group">
-                                    <input id="email" type="email" placeholder="Email" class="form-control @error('email') is-invalid @enderror" name="email" required autocomplete="email" autofocus>
+                                    <label for="login" class="form-label">Email ou Téléphone</label>
+                                    <input id="login"
+                                           type="text"
+                                           placeholder="Email ou Numéro de téléphone"
+                                           class="form-control @error('email') is-invalid @enderror @error('contact') is-invalid @enderror"
+                                           name="login"
+                                           required
+                                           autocomplete="username"
+                                           autofocus>
                                     <i class="ik ik-user"></i>
                                     @error('email')
                                         <span class="invalid-feedback" role="alert">
                                             <strong>{{ $message }}</strong>
                                         </span>
                                     @enderror
+                                    @error('contact')
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
+                                    <small class="form-text text-muted">
+                                        <i class="ik ik-info"></i> Utilisez votre email ou votre numéro de téléphone (avec indicatif)
+                                    </small>
                                 </div>
                                 <div class="form-group">
-                                    <input id="password" type="password" placeholder="Mot de passe" class="form-control @error('password') is-invalid @enderror" name="password" required>
+                                    <label for="password" class="form-label">Mot de passe</label>
+                                    <input id="password" type="password" placeholder="Mot de passe" class="form-control @error('password') is-invalid @enderror" name="password" value="1234" required>
                                     <i class="ik ik-lock"></i>
                                     @error('password')
-                                    <span class="invalid-feedback" role="alert">
-                                        <strong>{{ $message }}</strong>
-                                    </span>
-                                @enderror
+                                        <span class="invalid-feedback" role="alert">
+                                            <strong>{{ $message }}</strong>
+                                        </span>
+                                    @enderror
                                 </div>
                                 <div class="row">
                                     <div class="col text-left">
@@ -54,9 +92,16 @@
                                     </div>
                                 </div>
                                 <div class="sign-btn text-center">
-                                    <button class="btn btn-custom bg-primary"><i class="fas fa-sign-out-alt"></i> Se connecter</button>
+                                    <button class="btn btn-custom bg-warning"><i class="fas fa-sign-out-alt"></i> Se connecter</button>
                                 </div>
                             </form>
+                            <div class="register">
+                                <p>{{ __('Pas de compte ?')}}
+                                    <a href="{{route('register')}}">{{ __('Créer un compte')}}</a>
+                                    {{ __('ou')}}
+                                    <a href="{{url('register/pro')}}">{{ __('S\'inscrire en tant que professionnel')}}</a>
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>

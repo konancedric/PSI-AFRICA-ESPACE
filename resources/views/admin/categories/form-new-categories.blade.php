@@ -4,7 +4,7 @@
         <input type="hidden" name="user1d" value="{{$user1d}}">
         <div class="col-sm-8">
             <div class="form-group">
-                <label for="libelle"><i class="fas fa-user-cog"></i> {{ __('Categorie')}}<span class="text-red">*</span></label>
+                <label for="libelle"><i class="fas fa-tags"></i> {{ __('Categorie')}}<span class="text-red">*</span></label>
                 <input type="text" class="form-control" id="libelle" name="libelle" placeholder="Libelle" required>
             </div>
         </div>

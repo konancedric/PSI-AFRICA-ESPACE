@@ -27,3 +27,6 @@
 
 <link rel="stylesheet" href="{{ asset('css/style.css') }}">
 <link rel="stylesheet" href="{{ asset('plugins/select2/dist/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ asset('plugins/tinymce/js/tinymce/skins/content/default/content.min.css') }}">
+
+<script src="{{ asset('https://cdn.ckeditor.com/4.16.2/standard/ckeditor.js') }}"></script>

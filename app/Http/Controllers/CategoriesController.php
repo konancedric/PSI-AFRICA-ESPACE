@@ -184,7 +184,7 @@ class CategoriesController extends Controller
      * @param int $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function delete($id): RedirectResponse
+    public function deleteOP($id): RedirectResponse
     {
         if ($user = Categories::find($id)) {
             $user->delete();
