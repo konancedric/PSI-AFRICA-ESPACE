@@ -30,6 +30,20 @@ class Kernel extends ConsoleKernel
                  ->timezone('Africa/Abidjan')
                  ->withoutOverlapping()
                  ->onOneServer();
+
+        // Sync automatique Profil Visa → CRM toutes les minutes
+        $schedule->command('crm:sync-profil-visa')
+                 ->everyMinute()
+                 ->timezone('Africa/Abidjan')
+                 ->withoutOverlapping()
+                 ->runInBackground();
+
+        // Relances hebdomadaires SMS (chaque lundi à 09h00)
+        $schedule->command('sms:relances-hebdomadaires')
+                 ->weeklyOn(1, '09:00')
+                 ->timezone('Africa/Abidjan')
+                 ->withoutOverlapping()
+                 ->onOneServer();
     }
 
     /**
